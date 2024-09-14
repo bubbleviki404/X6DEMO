@@ -15,30 +15,15 @@
       <div id="diyConnector" class="app-content"></div>
     </div>
     <div id="minimap" class="app-minimap"></div>
-    <Menu id="menu_self">
-        <Menu.Item key="1">1st menu item</Menu.Item>
-        <Menu.Item key="2">2nd menu item</Menu.Item>
-        <Menu.Item key="3">
-          <a target="_blank" rel="noopener noreferrer" href="http://www.tmall.com/">
-            3rd menu item
-          </a>
-        </Menu.Item>
-        <Menu.Item key="4" danger>a danger item</Menu.Item>
-      </Menu>
   </div>
-  
 </template>
 
 <script lang="ts">
-import { Menu, Dropdown } from 'ant-design-vue';
 import { onMounted, onUnmounted, nextTick, ref } from 'vue';
 import FileSaver from 'file-saver';
-import { Graph, Path, Cell,ToolsView } from '@antv/x6';
+import { Graph, Path, Cell, ToolsView } from '@antv/x6';
 import { History } from '@antv/x6-plugin-history';
 import { Selection } from '@antv/x6-plugin-selection';
-
-
-
 
 const ContextMenuTool = class extends ToolsView.ToolItem {
   constructor() {
@@ -99,7 +84,7 @@ const ContextMenuTool = class extends ToolsView.ToolItem {
   }
 
   onMouseDown = () => {
-    debugger
+    debugger;
     this.timer = window.setTimeout(() => {
       this.updatePosition();
       this.toggleContextMenu(false);
@@ -107,7 +92,7 @@ const ContextMenuTool = class extends ToolsView.ToolItem {
   };
 
   onContextMenu({ e }) {
-    debugger
+    debugger;
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = 0;
@@ -137,14 +122,10 @@ export default {
     // 1. Create container
     const container = ref(null);
 
-
-
     const canUndo = ref(false);
     const canRedo = ref(false);
 
-const menu = document.getElementById('menu_self');
-
-
+    const menu = document.getElementById('menu_self');
 
     // 2.Register connector
     const graphRegister = () => {
@@ -334,9 +315,8 @@ const menu = document.getElementById('menu_self');
     Graph.unregisterConnector('pointRightConnector');
     Graph.registerConnector('pointRightConnector', pointRightConnector);
 
-
-    Graph.registerEdgeTool('contextmenu', ContextMenuTool, true)
-    Graph.registerNodeTool('contextmenu', ContextMenuTool, true)
+    Graph.registerEdgeTool('contextmenu', ContextMenuTool, true);
+    Graph.registerNodeTool('contextmenu', ContextMenuTool, true);
 
     // 2.Prepare data (Nodes, Edges)
     const edges = (
@@ -550,7 +530,8 @@ const menu = document.getElementById('menu_self');
           zIndex: 10,
           attrs: nodeAttrs('rgba(95,0,255,0.9)'),
           ports: nodePorts(),
-        },{
+        },
+        {
           id: 'p9',
           shape: 'rect',
           x: 1040,
@@ -718,13 +699,10 @@ const menu = document.getElementById('menu_self');
       labels: [],
     };
 
-
     const filter = {
-      name: "blur",
-      args: { x:13,y:16}
+      name: 'blur',
+      args: { x: 13, y: 16 },
     };
-
-    
 
     const init = () => {
       graph.value = new Graph({
@@ -745,35 +723,32 @@ const menu = document.getElementById('menu_self');
         },
       });
 
-
-
-
       graph.value.addNodes(data.nodes);
       graph.value.addEdges(data.edges);
 
       const parent = graph.value.addNode({
-  x: 40,
-  y: 40,
-  width: 240,
-  height: 160,
-  zIndex: 1,
-  label: 'Parent\n(try to move me)',
-  attrs: {
-    label: {
-      refY: 120,
-      fontSize: 12,
-    },
-    body: {
-      fill: '#fffbe6',
-      stroke: '#ffe7ba',
-    },
-  },
-})
-debugger
+        x: 40,
+        y: 40,
+        width: 240,
+        height: 160,
+        zIndex: 1,
+        label: 'Parent\n(try to move me)',
+        attrs: {
+          label: {
+            refY: 120,
+            fontSize: 12,
+          },
+          body: {
+            fill: '#fffbe6',
+            stroke: '#ffe7ba',
+          },
+        },
+      });
+      debugger;
 
-parent.addChild(graph.value.getNodes()[0]);
-parent.addChild(graph.value.getNodes()[1]);
-debugger
+      parent.addChild(graph.value.getNodes()[0]);
+      parent.addChild(graph.value.getNodes()[1]);
+      debugger;
 
       /** 插件添加 */
       graph.value.use(new History({ enabled: true }));
@@ -877,15 +852,11 @@ debugger
 
       /** 撤销重做事件 */
       graph.value.on('history:change', () => {
-        debugger
+        debugger;
         canUndo.value = graph.value.canUndo();
         canRedo.value = graph.value.canRedo();
         console.log('canUndo:', canUndo.value, 'canRedo:', canRedo.value);
-
-
-
-
-});
+      });
     };
     //已知角度和斜边，求直角边
     function hypotenuse(long, angle) {
@@ -928,15 +899,14 @@ debugger
               stroke: 'yellow',
             },
           },
-        tools: [
-          {
-            name: 'contextmenu',
-            args: {
-              menu,
+          tools: [
+            {
+              name: 'contextmenu',
+              args: {
+                menu,
+              },
             },
-          },
-        ],
-          
+          ],
         });
         graph.value.addNode(node);
         nodeTemp.push(id);
@@ -956,7 +926,7 @@ debugger
       }
     };
     const onUndo = () => {
-      debugger
+      debugger;
       if (graph && graph.value.canUndo()) {
         console.log('Undoing...');
         graph.value.undo();
@@ -965,7 +935,7 @@ debugger
       }
     };
     const onRedo = () => {
-      debugger
+      debugger;
       if (graph && graph.value.canRedo()) {
         console.log('Redoing...');
         graph.value.redo();
@@ -1002,7 +972,7 @@ debugger
       // console.log(file)
       // graph.fromJSON()
     };
-    
+
     onMounted(async () => {
       nextTick(() => {
         init();
@@ -1013,13 +983,13 @@ debugger
       window.removeEventListener('keydown', handleKeydown);
     });
     return {
-    canUndo,
-    canRedo,
-    onUndo,
-    onRedo,
-    importData,
-    exportData
-  };
+      canUndo,
+      canRedo,
+      onUndo,
+      onRedo,
+      importData,
+      exportData,
+    };
   },
 };
 </script>

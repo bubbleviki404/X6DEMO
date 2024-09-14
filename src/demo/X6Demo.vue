@@ -524,12 +524,10 @@ export default {
       graph.value.addNodes(data.nodes);
       graph.value.addEdges(data.edges);
 
-
       //右键监听
-      graph.value.on("node:contextmenu", ({ node }) => {
-        debugger
+      graph.value.on('node:contextmenu', ({ node }) => {
+        debugger;
       });
-
 
       /** 插件添加 */
       graph.value.use(
@@ -582,14 +580,13 @@ export default {
               fill: 'red',
               stroke: 'yellow',
             },
-            
-  tools: [
-    {
-      name: 'contextmenu',
-      args: {
-      },
-    },
-  ],
+
+            tools: [
+              {
+                name: 'contextmenu',
+                args: {},
+              },
+            ],
           },
         });
         graph.value.addNode(node);
