@@ -1,9 +1,17 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div id="app"></div>
-  <router-view />
+   <div id="app">
+    <router-view />
+   </div>
+
 </template>
 
-<style scoped>
+<style lang="less" scoped>
+	#app,
+	body,
+	html {
+		width: 100%;
+		height: 100%;
+	}
 </style>
