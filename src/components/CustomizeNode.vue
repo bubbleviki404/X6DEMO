@@ -666,6 +666,8 @@ const drawPoint = (points) => {
       shape: item.shape,
       x: item.x,
       y: item.y,
+      width: 80,
+      height: 100,
       label: `${index}: ${item.x.toFixed(0)},${item.y.toFixed(0)}`,
       data: item.data,
     });
@@ -721,7 +723,7 @@ const renderGraph = () => {
       multiple: true,
       rubberband: true,
       movable: true,
-      strict:true,
+      strict: true,
       showNodeSelectionBox: true,
     })
   );
@@ -783,6 +785,21 @@ const renderNodes = () => {
         n.setData(data);
       }
     });
+
+    allEdges.forEach((e) => {
+      if (
+        e.getSourceNode().id !== selectedNodeId &&
+        e.getTargetNode().id !== selectedNodeId
+        // !connectedNodeIds.includes(e.getSourceNode().id) &&
+        // !connectedNodeIds.includes(e.getTargetNode().id)
+      ) {
+        // 边
+        e.labels.forEach((label, index) => {
+          debugger;
+        });
+        e.setVisible(false);
+      }
+    });
   });
 
   /** 节点取消选中事件 */
@@ -793,6 +810,11 @@ const renderNodes = () => {
       data.blur = false;
       n.removeData();
       n.setData(data);
+    });
+
+    const allEdges = graph.value.getEdges();
+    allEdges.forEach((e) => {
+      e.setVisible(true);
     });
   });
 };
