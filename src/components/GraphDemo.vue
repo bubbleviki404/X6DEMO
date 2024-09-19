@@ -136,7 +136,7 @@ const renderGraph = () => {
     canRedo.value = graph.value.canRedo();
   });
 
-  // 款选
+  // 框选
   graph.value.use(
     new Selection({
       enabled: true,
@@ -159,7 +159,6 @@ const renderNodes = () => {
   graph.value.on("node:contextmenu", ({ view, e }) => {
     if (view && view.cell && view.cell.id) {
       selectedNodeId.value = view.cell.id;
-      debugger;
     }
   });
 
@@ -195,24 +194,17 @@ const canUndo = ref(false);
 const canRedo = ref(false);
 const onUndo = () => {
   if (graph && graph.value.canUndo()) {
-    console.log("Undoing...");
     graph.value.undo();
-  } else {
-    console.log("Cannot undo");
-  }
+  } 
 };
 const onRedo = () => {
   if (graph && graph.value.canRedo()) {
-    console.log("Redoing...");
     graph.value.redo();
-  } else {
-    console.log("Cannot redo");
   }
 };
 
 /** 导出 */
 const exportToPng = () => {
-  debugger;
   graph.value.exportPNG("导出测试", {
     quality: 1,
   });
