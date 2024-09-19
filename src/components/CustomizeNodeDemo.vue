@@ -5,6 +5,7 @@
 
 <script lang="ts" setup>
 import { nextTick, onMounted, ref, onUnmounted } from "vue";
+import { Back, Right, Search } from "@element-plus/icons-vue";
 import { Graph } from "@antv/x6";
 import { Scroller } from "@antv/x6-plugin-scroller";
 import { Selection } from "@antv/x6-plugin-selection";

@@ -1,20 +1,52 @@
 <template>
+  <el-row>
+    <el-col :span="4">
+      <el-button @click="onUndo" :disabled="!canUndo"
+        ><el-icon :size="20"> <Back /> </el-icon
+      ></el-button>
+      <el-button @click="onRedo" :disabled="!canRedo">
+        <el-icon :size="20"> <Right /> </el-icon></el-button
+    ></el-col>
+    <el-col :span="4">
+      <el-input
+        v-model="nodeNameSearch"
+        style="width: 120px"
+        placeholder="节点名称"
+        @keyup.enter.native="searchNodeByName"
+        :suffix-icon="Search"
+    /></el-col>
+    <!-- <el-col :span="4">
+      <el-button type="primary" @click="exportToPng">导出图片</el-button>
+    </el-col> -->
+  </el-row>
   <div id="graph_container"></div>
   <TeleportContainer />
 </template>
 
 <script lang="ts" setup>
+import { Back, Right, Search } from "@element-plus/icons-vue";
 import { nextTick, onMounted, ref, onUnmounted } from "vue";
 import { Graph, Path, Cell } from "@antv/x6";
 import { Scroller } from "@antv/x6-plugin-scroller";
 import { Selection } from "@antv/x6-plugin-selection";
+import { Export } from "@antv/x6-plugin-export";
+import { History } from "@antv/x6-plugin-history";
 import { register, getTeleport } from "@antv/x6-vue-shape";
 import NodeComponent from "./Node.vue";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
-
 const graph = ref<Graph>();
+
+const nodeNameSearch = ref("");
+const searchNodeByName = () => {
+  const allNodes = graph.value.getNodes();
+  allNodes.forEach((n) => {
+    if (n && n.getData() && n.getData().nodeName == nodeNameSearch.value) {
+      searchForNode(n.id);
+    }
+  });
+};
 
 // Register connector
 const graphRegister = () => {
@@ -667,6 +699,16 @@ const renderGraph = () => {
     })
   );
 
+  // 历史记录
+  graph.value.use(new History({ enabled: true }));
+  graph.value.on("history:change", () => {
+    canUndo.value = graph.value.canUndo();
+    canRedo.value = graph.value.canRedo();
+  });
+
+  // 导出
+  graph.value.use(new Export());
+
   // 双击-空白画布：画布内容居中对齐
   graph.value.on("blank:dblclick", () => {
     onCenterContent();
@@ -756,6 +798,9 @@ const renderNodes = () => {
 };
 
 /** 画布对齐 */
+const onCenter = () => {
+  graph.value.center();
+};
 const onCenterContent = () => {
   graph.value.centerContent();
 };
@@ -764,6 +809,32 @@ const onCenrerNode = (nodeId: string) => {
   if (node) {
     graph.value.centerCell(node);
   }
+};
+const searchForNode = (nodeName: string) => {
+  debugger;
+  const nodeId = nodeName.toLowerCase();
+  onCenrerNode(nodeId);
+};
+
+/** 撤销重做 */
+const canUndo = ref(false);
+const canRedo = ref(false);
+const onUndo = () => {
+  if (graph && graph.value.canUndo()) {
+    graph.value.undo();
+  }
+};
+const onRedo = () => {
+  if (graph && graph.value.canRedo()) {
+    graph.value.redo();
+  }
+};
+
+/** 导出 */
+const exportToPng = () => {
+  graph.value.exportPNG("导出测试", {
+    quality: 1,
+  });
 };
 
 onMounted(async () => {
@@ -781,5 +852,19 @@ onUnmounted(() => {});
   width: 100%;
   height: 100%;
   position: relative;
+}
+.el-row {
+  margin-bottom: 20px;
+}
+.el-row:last-child {
+  margin-bottom: 0;
+}
+.el-col {
+  border-radius: 4px;
+}
+
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
 }
 </style>
