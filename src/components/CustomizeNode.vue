@@ -258,7 +258,9 @@ const edges = (
       attrs: {
         label: {
           text: label.text,
-          stroke: label.color,
+          stroke: label.type == "money" ? "#393f45" : "#37a987",
+          type: label.type,
+          fill: label.type == "money" ? "#393f45" : "#37a987",
         },
         rect: {
           ref: "label",
@@ -497,9 +499,9 @@ const data = {
       [
         {
           text: "张三 20笔 共2000万\n李四 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
-        { text: "通话20次\n20240902-20240902", color: "#37a987" },
+        { text: "通话20次\n20240902-20240902", type: "phone" },
       ],
       "#315098",
       "pointConnector",
@@ -512,7 +514,7 @@ const data = {
       [
         {
           text: "王五 20笔 共2000万\n李四 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
       ],
       "#315098",
@@ -526,9 +528,9 @@ const data = {
       [
         {
           text: "王五 10笔 200万\n马六 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
-        { text: "通话20次\n20240902-20240902", color: "#37a987" },
+        { text: "通话20次\n20240902-20240902", type: "phone" },
       ],
       "#315098",
       "pointConnector",
@@ -541,7 +543,7 @@ const data = {
       [
         {
           text: "张一 10笔 200万\n张五 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
       ],
       "#315098",
@@ -555,7 +557,7 @@ const data = {
       [
         {
           text: "张二 10笔 200万\n马六 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
       ],
       "#315098",
@@ -569,9 +571,9 @@ const data = {
       [
         {
           text: "马六 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
-        { text: "通话20次\n20240902-20240902", color: "#37a987" },
+        { text: "通话20次\n20240902-20240902", type: "phone" },
       ],
       "#315098",
       "pointConnector",
@@ -584,7 +586,7 @@ const data = {
       [
         {
           text: "张六 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
       ],
       "#315098",
@@ -598,7 +600,7 @@ const data = {
       [
         {
           text: "张五 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
       ],
       "#315098",
@@ -612,7 +614,7 @@ const data = {
       [
         {
           text: "张一 10笔 200万\n20240902-20240902",
-          color: "#393f45",
+          type: "money",
         },
       ],
       "#315098",
@@ -626,7 +628,7 @@ const data = {
       [
         {
           text: "通话20次\n20240902-20240902",
-          color: "#37a987",
+          type: "phone",
           position: 0.8,
         },
       ],
@@ -635,7 +637,15 @@ const data = {
     ),
   ],
 };
-
+const originalColors = {
+  nodes: [],
+  edges: [],
+  labels: [],
+};
+const filter = {
+  name: "blur",
+  args: { x: 13, y: 16 },
+};
 //已知角度和斜边，求直角边
 function hypotenuse(long, angle) {
   //获得弧度
@@ -786,18 +796,39 @@ const renderNodes = () => {
       }
     });
 
+    // 边：保存原始颜色 && 虚化与当前选中节点不相连的边
     allEdges.forEach((e) => {
+      if (!originalColors.edges[e.id]) {
+        originalColors.edges[e.id] = e.attr("line/stroke");
+
+        e.labels.forEach((label, index) => {
+          originalColors.labels[e.id] = originalColors.labels[e.id] || {};
+        });
+      }
       if (
         e.getSourceNode().id !== selectedNodeId &&
         e.getTargetNode().id !== selectedNodeId
         // !connectedNodeIds.includes(e.getSourceNode().id) &&
         // !connectedNodeIds.includes(e.getTargetNode().id)
       ) {
-        // 边
-        e.labels.forEach((label, index) => {
-          debugger;
+        const filterColor = "rgba(0,0,0,0)";
+        e.attr("line/stroke", "rgba(0,0,0,.1)");
+
+        const size = e.labels.length;
+        const originLabel = e.labels;
+
+        for (let i = size - 1; i > -1; i--) {
+          e.removeLabelAt(0);
+        }
+
+        debugger;
+
+        originLabel.forEach((label, index) => {
+          label.attrs.label.stroke = filterColor;
+          label.attrs.label.fill = filterColor;
+          label.attrs.rect.fill = filterColor;
+          e.appendLabel(label);
         });
-        e.setVisible(false);
       }
     });
   });
@@ -813,8 +844,29 @@ const renderNodes = () => {
     });
 
     const allEdges = graph.value.getEdges();
+    // 恢复所有边的颜色
     allEdges.forEach((e) => {
-      e.setVisible(true);
+      if (originalColors.edges[e.id]) {
+        e.attr("line/stroke", originalColors.edges[e.id]); // 恢复边原始颜色
+
+        const size = e.labels.length;
+        const originLabel = e.labels;
+
+        for (let i = size - 1; i > -1; i--) {
+          e.removeLabelAt(0);
+        }
+
+        debugger;
+
+        originLabel.forEach((label, index) => {
+          label.attrs.rect.fill = "rgba(0,0,0,.1)";
+          label.attrs.label.stroke =
+            label.attrs.label.type == "money" ? "#393f45" : "#37a987";
+          label.attrs.label.fill =
+            label.attrs.label.type == "money" ? "#393f45" : "#37a987";
+          e.appendLabel(label);
+        });
+      }
     });
   });
 };
