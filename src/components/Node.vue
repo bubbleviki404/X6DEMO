@@ -1,5 +1,5 @@
 <template>
-   <div class="node_menu" :class="{ 'blur-effect': blur }">
+  <div class="node_menu" :class="{ 'blur-effect': blur }">
     <el-dropdown
       placement="right"
       trigger="contextmenu"
@@ -8,7 +8,7 @@
       <div class="node_menu_title">{{ nodeName }}</div>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item >定位到此处</el-dropdown-item>
+          <el-dropdown-item>定位到此处</el-dropdown-item>
           <el-dropdown-item divided>上钻</el-dropdown-item>
           <el-dropdown-item divided disabled>下钻</el-dropdown-item>
           <el-dropdown-item divided>去向</el-dropdown-item>
@@ -45,18 +45,26 @@ onMounted(() => {
 
   // 监听节点变化
   node.on("change:data", ({ current }) => {
-    const { nodeName, nodeId,blur } = current;
-    nodeName.value = nodeName;
-    nodeId.value = nodeId;
-    blur.value = blur?blur:false;
+    debugger;
+    if (current && current.nodeName) {
+      const {
+        nodeName: newNodeName,
+        nodeId: newNodeId,
+        blur: newBlur,
+      } = current;
+
+      // 更新当前属性
+      nodeName.value = newNodeName || ""; 
+      nodeId.value = newNodeId || ""; 
+      blur.value = newBlur !== undefined ? newBlur : false; 
+    }
   });
 });
 </script>
 
 <style scoped>
 .node_menu {
-  min-height: 80px;
-  width: 100px;
+  width: 80px;
   height: 100px;
   border: solid 1px rgb(143, 143, 143);
   background: white;
