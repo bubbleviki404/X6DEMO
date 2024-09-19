@@ -721,6 +721,7 @@ const renderGraph = () => {
       multiple: true,
       rubberband: true,
       movable: true,
+      strict:true,
       showNodeSelectionBox: true,
     })
   );
@@ -752,7 +753,6 @@ const renderNodes = () => {
 
   /** 节点选中事件 */
   graph.value.on("node:selected", ({ node }) => {
-    debugger;
     console.log("node:selected:", node);
 
     // 获取当前选中的节点 ID
@@ -811,7 +811,6 @@ const onCenrerNode = (nodeId: string) => {
   }
 };
 const searchForNode = (nodeName: string) => {
-  debugger;
   const nodeId = nodeName.toLowerCase();
   onCenrerNode(nodeId);
 };

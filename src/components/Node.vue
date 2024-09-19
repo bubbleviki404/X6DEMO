@@ -45,7 +45,6 @@ onMounted(() => {
 
   // 监听节点变化
   node.on("change:data", ({ current }) => {
-    debugger;
     if (current && current.nodeName) {
       const {
         nodeName: newNodeName,
