@@ -24,6 +24,7 @@
 </template>
 
 <script lang="ts" setup>
+import * as htmlToImage from 'html-to-image';
 import { Back, Right, Search } from "@element-plus/icons-vue";
 import { nextTick, onMounted, ref, onUnmounted } from "vue";
 import { Graph, Path, Cell } from "@antv/x6";
@@ -905,8 +906,15 @@ const onRedo = () => {
 
 /** 导出 */
 const exportToPng = () => {
-  graph.value.exportPNG("导出测试", {
-    quality: 1,
+  // graph.value.exportPNG("导出测试", {
+  //   quality: 1,
+  // });
+  const container =  document.getElementsByClassName("x6-graph-svg")[0];
+  htmlToImage.toPng(container as HTMLElement).then((dataUri) => {
+    const link = document.createElement('a');
+    link.download = '导出.png';
+    link.href = dataUri;
+    link.click();
   });
 };
 
