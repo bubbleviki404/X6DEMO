@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-import * as htmlToImage from 'html-to-image';
+import * as htmlToImage from "html-to-image";
 import { Back, Right, Search } from "@element-plus/icons-vue";
 import { nextTick, onMounted, ref, onUnmounted } from "vue";
 import { Graph, Path, Cell } from "@antv/x6";
@@ -34,6 +34,11 @@ import { Export } from "@antv/x6-plugin-export";
 import { History } from "@antv/x6-plugin-history";
 import { register, getTeleport } from "@antv/x6-vue-shape";
 import NodeComponent from "./Node.vue";
+import { DagreLayout } from "@antv/layout";
+
+
+
+
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
@@ -352,151 +357,209 @@ const nodePorts = () => {
     },
   };
 };
-const data = {
+
+// 原始数据
+const originData = {
   nodes: [
     {
-      id: "p1",
-      shape: "custom-vue-node",
-      x: 140,
-      y: 200,
-
-      label: "p1\n\n张三",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(95,149,255,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p1",
-        nodeName: "张三",
-        blur: false,
-      },
+      id: "n0",
+      label: "张三",
     },
     {
-      id: "p2",
-      shape: "custom-vue-node",
-      x: 440,
-      y: 240,
-
-      label: "p2\n\n李四",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(255,149,255,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p2",
-        nodeName: "李四",
-        blur: false,
-      },
+      id: "n1",
+      label: "李四",
     },
     {
-      id: "p3",
-      shape: "custom-vue-node",
-      x: 840,
-      y: 140,
-
-      label: "p3\n\n王五",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(95,255,255,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p3",
-        nodeName: "王五",
-        blur: false,
-      },
+      id: "n2",
+      label: "王五",
     },
     {
-      id: "p4",
-      shape: "custom-vue-node",
-      x: 840,
-      y: 440,
-      label: "p4\n\n马六",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(95,149,255,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p4",
-        nodeName: "马六",
-        blur: false,
-      },
+      id: "n3",
+      label: "马六",
     },
     {
-      id: "p5",
-      shape: "custom-vue-node",
-      x: 540,
-      y: 440,
-      label: "p5\n\n张一",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(95,149,255,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p5",
-        nodeName: "张一",
-        blur: false,
-      },
+      id: "n4",
+      label: "张一",
     },
     {
-      id: "p6",
-      shape: "custom-vue-node",
-      x: 240,
-      y: 540,
-      label: "p6\n\n张二",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(0,149,0,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p6",
-        nodeName: "张二",
-        blur: false,
-      },
+      id: "n5",
+      label: "张二",
     },
     {
-      id: "p7",
-      shape: "custom-vue-node",
-      x: 840,
-      y: 640,
-      label: "p7\n\n张五",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(95,0,0,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p7",
-        nodeName: "张五",
-        blur: false,
-      },
+      id: "n6",
+      label: "张五",
     },
     {
-      id: "p8",
-      shape: "custom-vue-node",
-      x: 1040,
-      y: 240,
-      label: "p8\n\n张六",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(95,0,255,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p8",
-        nodeName: "张六",
-        blur: false,
-      },
+      id: "n7",
+      label: "张六",
     },
     {
-      id: "p9",
-      shape: "custom-vue-node",
-      x: 1040,
-      y: 440,
-      label: "p9\n\nSOLO",
-      zIndex: 10,
-      attrs: nodeAttrs("rgba(35,0,255,0.9)"),
-      ports: nodePorts(),
-      data: {
-        nodeId: "p9",
-        nodeName: "SOLO",
-        blur: false,
-      },
+      id: "n8",
+      label: "SOLO",
     },
   ],
+  edges: {
+    money: [
+      {
+        from: "n0",
+        to: "n1",
+        transaction: 2000,
+        count: 20,
+        startDate: "20200101",
+        endDate: "20210207",
+      },
+      {
+        from: "n1",
+        to: "n0",
+        money: 200,
+        count: 10,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+      {
+        from: "n2",
+        to: "n1",
+        transaction: 2000,
+        count: 20,
+        startDate: "20200101",
+        endDate: "20210207",
+      },
+      {
+        from: "n1",
+        to: "n2",
+        money: 200,
+        count: 10,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+      {
+        from: "n3",
+        to: "n2",
+        transaction: 2000,
+        count: 10,
+        startDate: "20200101",
+        endDate: "20210207",
+      },
+      {
+        from: "n2",
+        to: "n3",
+        money: 200,
+        count: 10,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+      {
+        from: "n4",
+        to: "n6",
+        transaction: 2000,
+        count: 10,
+        startDate: "20200101",
+        endDate: "20210207",
+      },
+      {
+        from: "n6",
+        to: "n4",
+        money: 200,
+        count: 10,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+      {
+        from: "n5",
+        to: "n3",
+        transaction: 2000,
+        count: 10,
+        startDate: "20200101",
+        endDate: "20210207",
+      },
+      {
+        from: "n3",
+        to: "n5",
+        money: 200,
+        count: 10,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+      {
+        from: "n3",
+        to: "n7",
+        money: 150,
+        count: 8,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+      {
+        from: "n2",
+        to: "n6",
+        money: 120,
+        count: 5,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+      {
+        from: "n3",
+        to: "n4",
+        money: 190,
+        count: 5,
+        startDate: "20110701",
+        endDate: "20230405",
+      },
+    ],
+    phone: [
+      {
+        from: "n0",
+        to: "n1",
+        count: 20,
+        startDate: "20120701",
+        endDate: "20230405",
+      },
+      {
+        from: "n6",
+        to: "n1",
+        count: 20,
+        startDate: "20120701",
+        endDate: "20230405",
+      },
+      {
+        from: "n3",
+        to: "n1",
+        count: 20,
+        startDate: "20120701",
+        endDate: "20230405",
+      },
+      {
+        from: "n3",
+        to: "n2",
+        count: 20,
+        startDate: "20120701",
+        endDate: "20230405",
+      },
+    ],
+  },
+};
+
+// 节点数据
+const buildNode = (id: String, label: String) => {
+  return {
+    id: id,
+    shape: "custom-vue-node",
+    x: 0,
+    y: 0,
+    label: label,
+    data: {
+      nodeId: id,
+      nodeName: label,
+      blur: false,
+    },
+    ports: nodePorts(),
+  };
+};
+const data = {
+  nodes:[],
   edges: [
     edges(
-      { cell: "p1", port: "moneyIn" },
-      { cell: "p2", port: "moneyIn" },
+      { cell: "n0", port: "moneyIn" },
+      { cell: "n1", port: "moneyIn" },
       [
         {
           text: "张三 20笔 共2000万\n李四 10笔 200万\n20240902-20240902",
@@ -510,8 +573,8 @@ const data = {
       "classic"
     ),
     edges(
-      { cell: "p3", port: "moneyIn" },
-      { cell: "p2", port: "moneyIn" },
+      { cell: "n2", port: "moneyIn" },
+      { cell: "n1", port: "moneyIn" },
       [
         {
           text: "王五 20笔 共2000万\n李四 10笔 200万\n20240902-20240902",
@@ -524,8 +587,8 @@ const data = {
       "classic"
     ),
     edges(
-      { cell: "p4", port: "moneyIn" },
-      { cell: "p3", port: "moneyIn" },
+      { cell: "n3", port: "moneyIn" },
+      { cell: "n2", port: "moneyIn" },
       [
         {
           text: "王五 10笔 200万\n马六 10笔 200万\n20240902-20240902",
@@ -539,8 +602,8 @@ const data = {
       "classic"
     ),
     edges(
-      { cell: "p5", port: "moneyIn" },
-      { cell: "p7", port: "moneyIn" },
+      { cell: "n4", port: "moneyIn" },
+      { cell: "n6", port: "moneyIn" },
       [
         {
           text: "张一 10笔 200万\n张五 10笔 200万\n20240902-20240902",
@@ -553,8 +616,8 @@ const data = {
       "classic"
     ),
     edges(
-      { cell: "p6", port: "moneyIn" },
-      { cell: "p4", port: "moneyIn" },
+      { cell: "n5", port: "moneyIn" },
+      { cell: "n3", port: "moneyIn" },
       [
         {
           text: "张二 10笔 200万\n马六 10笔 200万\n20240902-20240902",
@@ -567,8 +630,8 @@ const data = {
       "classic"
     ),
     edges(
-      { cell: "p4", port: "moneyIn" },
-      { cell: "p2", port: "moneyIn" },
+      { cell: "n3", port: "moneyIn" },
+      { cell: "n1", port: "moneyIn" },
       [
         {
           text: "马六 10笔 200万\n20240902-20240902",
@@ -582,8 +645,8 @@ const data = {
       null
     ),
     edges(
-      { cell: "p4", port: "moneyIn" },
-      { cell: "p8", port: "moneyIn" },
+      { cell: "n3", port: "moneyIn" },
+      { cell: "n7", port: "moneyIn" },
       [
         {
           text: "张六 10笔 200万\n20240902-20240902",
@@ -596,8 +659,8 @@ const data = {
       null
     ),
     edges(
-      { cell: "p3", port: "moneyIn" },
-      { cell: "p7", port: "moneyIn" },
+      { cell: "n2", port: "moneyIn" },
+      { cell: "n6", port: "moneyIn" },
       [
         {
           text: "张五 10笔 200万\n20240902-20240902",
@@ -610,8 +673,8 @@ const data = {
       null
     ),
     edges(
-      { cell: "p4", port: "moneyIn" },
-      { cell: "p5", port: "moneyIn" },
+      { cell: "n3", port: "moneyIn" },
+      { cell: "n4", port: "moneyIn" },
       [
         {
           text: "张一 10笔 200万\n20240902-20240902",
@@ -624,8 +687,8 @@ const data = {
       null
     ),
     edges(
-      { cell: "p7", port: "moneyOut" },
-      { cell: "p2", port: "moneyOut" },
+      { cell: "n6", port: "moneyOut" },
+      { cell: "n1", port: "moneyOut" },
       [
         {
           text: "通话20次\n20240902-20240902",
@@ -638,6 +701,10 @@ const data = {
     ),
   ],
 };
+originData.nodes.forEach(({ id, label }) => {
+  data.nodes.push(buildNode(id, label)); // 使用解构提取 id 和 label
+});
+
 const originalColors = {
   nodes: [],
   edges: [],
@@ -666,26 +733,6 @@ function getAngle(x1, y1, x2, y2) {
   }
   return angle > 0 ? 360 - angle : 360 + angle;
 }
-
-const nodeTemp = [];
-const drawPoint = (points) => {
-  if (nodeTemp.length > 0) return;
-  points.forEach((item, index) => {
-    let id = `${item.x.toFixed(2)},${item.y.toFixed(2)}`;
-    let node = graph.value.createNode({
-      id: id,
-      shape: item.shape,
-      x: item.x,
-      y: item.y,
-      width: 80,
-      height: 100,
-      label: `${index}: ${item.x.toFixed(0)},${item.y.toFixed(0)}`,
-      data: item.data,
-    });
-    graph.value.addNode(node);
-    nodeTemp.push(id);
-  });
-};
 
 const renderGraph = () => {
   // 初始化画布
@@ -750,9 +797,21 @@ const renderNodes = () => {
     component: NodeComponent,
   });
 
-  // 初始化节点
-  graph.value.addNodes(data.nodes);
-  graph.value.addEdges(data.edges);
+  const dagreLayout = new DagreLayout({
+  type: 'dagre',
+  rankdir: 'LR',
+  align: 'UR',
+  ranksep: 75,
+  nodesep: 55,
+})
+const model = dagreLayout.layout(data)
+debugger
+graph.value.fromJSON(model)
+
+  // // 初始化节点
+  // graph.value.addNodes(data.nodes);
+  // graph.value.addEdges(data.edges);
+
 
   // 画布节点对齐
   onCenterContent();
@@ -909,10 +968,10 @@ const exportToPng = () => {
   // graph.value.exportPNG("导出测试", {
   //   quality: 1,
   // });
-  const container =  document.getElementsByClassName("x6-graph-svg")[0];
+  const container = document.getElementsByClassName("x6-graph-svg")[0];
   htmlToImage.toPng(container as HTMLElement).then((dataUri) => {
-    const link = document.createElement('a');
-    link.download = '导出.png';
+    const link = document.createElement("a");
+    link.download = "导出.png";
     link.href = dataUri;
     link.click();
   });
