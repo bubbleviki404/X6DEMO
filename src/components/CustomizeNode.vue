@@ -35,26 +35,14 @@ import { History } from "@antv/x6-plugin-history";
 import { register, getTeleport } from "@antv/x6-vue-shape";
 import NodeComponent from "./Node.vue";
 import { DagreLayout } from "@antv/layout";
-
-
-
-
+import { Connector } from "@antv/x6/lib/registry";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
 const graph = ref<Graph>();
 
 const nodeNameSearch = ref("");
-const searchNodeByName = () => {
-  const allNodes = graph.value.getNodes();
-  allNodes.forEach((n) => {
-    if (n && n.getData() && n.getData().nodeName == nodeNameSearch.value) {
-      searchForNode(n.id);
-    }
-  });
-};
 
-// Register connector
 const graphRegister = () => {
   Graph.registerConnector(
     "single-left-right-top-connector",
@@ -241,122 +229,6 @@ const pointRightConnector = (s, e) => {
 };
 Graph.unregisterConnector("pointRightConnector");
 Graph.registerConnector("pointRightConnector", pointRightConnector);
-const edges = (
-  source,
-  target,
-  labels,
-  color,
-  connector,
-  targetMarker = null,
-  sourceMarker = null
-) => {
-  const baseOffset = -50; // 基础偏移量
-
-  let distance = 0.5;
-  if (sourceMarker == null) {
-    distance = 0.7;
-  }
-
-  const labelItems = labels.map((label, index) => {
-    const currentOffset = baseOffset + index * 60; // 每个标签增加10的偏移量
-
-    return {
-      attrs: {
-        label: {
-          text: label.text,
-          stroke: label.type == "money" ? "#393f45" : "#37a987",
-          type: label.type,
-          fill: label.type == "money" ? "#393f45" : "#37a987",
-        },
-        rect: {
-          ref: "label",
-          fill: "rgba(0,0,0,.1)",
-        },
-      },
-      position: {
-        distance: distance,
-        offset: currentOffset, // 动态计算偏移量
-      },
-    };
-  });
-
-  return {
-    shape: "edge",
-    source: source,
-    target: target,
-    zIndex: 1,
-    connector: connector,
-    labels: labelItems,
-    attrs: {
-      // line 是选择器名称，选中的边的 path 元素
-      line: {
-        stroke: color,
-        strokeWidth: targetMarker && sourceMarker ? 3 : 1,
-        targetMarker: targetMarker && sourceMarker ? null : targetMarker,
-        sourceMarker: targetMarker && sourceMarker ? null : sourceMarker,
-      },
-    },
-  };
-};
-const nodeAttrs = (bgcolor) => {
-  return {
-    // body 是选择器名称，选中的是 rect 元素
-    body: {
-      stroke: "#8f8f8f",
-      strokeWidth: 1,
-      fill: bgcolor, // 'rgba(95,149,255,0.9)',
-      rx: 6,
-      ry: 6,
-    },
-  };
-};
-const nodePorts = () => {
-  return {
-    items: [
-      { group: "moneyIn", id: "moneyIn" },
-      { group: "moneyOut", id: "moneyOut" },
-      // { group: 'phone', id: 'phone' },
-    ],
-    groups: {
-      moneyIn: {
-        position: { name: "left" },
-        attrs: {
-          circle: {
-            magnet: true,
-            stroke: "#000",
-            fill: "#315098",
-            r: 0,
-          },
-        },
-        zIndex: 1,
-      },
-      moneyOut: {
-        position: { name: "right" },
-        attrs: {
-          circle: {
-            magnet: true,
-            stroke: "#000",
-            fill: "#37a987",
-            r: 0,
-          },
-        },
-        zIndex: 1,
-      },
-      phone: {
-        position: { name: "bottom" },
-        attrs: {
-          circle: {
-            magnet: true,
-            stroke: "#000",
-            fill: "yellow",
-            r: 0,
-          },
-        },
-        zIndex: 1,
-      },
-    },
-  };
-};
 
 // 原始数据
 const originData = {
@@ -403,7 +275,7 @@ const originData = {
       {
         from: "n0",
         to: "n1",
-        transaction: 2000,
+        amount: 2000,
         count: 20,
         startDate: "20200101",
         endDate: "20210207",
@@ -411,7 +283,7 @@ const originData = {
       {
         from: "n1",
         to: "n0",
-        money: 200,
+        amount: 200,
         count: 10,
         startDate: "20110701",
         endDate: "20230405",
@@ -419,7 +291,7 @@ const originData = {
       {
         from: "n2",
         to: "n1",
-        transaction: 2000,
+        amount: 2000,
         count: 20,
         startDate: "20200101",
         endDate: "20210207",
@@ -427,7 +299,7 @@ const originData = {
       {
         from: "n1",
         to: "n2",
-        money: 200,
+        amount: 200,
         count: 10,
         startDate: "20110701",
         endDate: "20230405",
@@ -435,7 +307,7 @@ const originData = {
       {
         from: "n3",
         to: "n2",
-        transaction: 2000,
+        amount: 2000,
         count: 10,
         startDate: "20200101",
         endDate: "20210207",
@@ -443,7 +315,7 @@ const originData = {
       {
         from: "n2",
         to: "n3",
-        money: 200,
+        amount: 200,
         count: 10,
         startDate: "20110701",
         endDate: "20230405",
@@ -451,7 +323,7 @@ const originData = {
       {
         from: "n4",
         to: "n6",
-        transaction: 2000,
+        amount: 2000,
         count: 10,
         startDate: "20200101",
         endDate: "20210207",
@@ -459,7 +331,7 @@ const originData = {
       {
         from: "n6",
         to: "n4",
-        money: 200,
+        amount: 200,
         count: 10,
         startDate: "20110701",
         endDate: "20230405",
@@ -467,7 +339,7 @@ const originData = {
       {
         from: "n5",
         to: "n3",
-        transaction: 2000,
+        amount: 2000,
         count: 10,
         startDate: "20200101",
         endDate: "20210207",
@@ -475,7 +347,7 @@ const originData = {
       {
         from: "n3",
         to: "n5",
-        money: 200,
+        amount: 200,
         count: 10,
         startDate: "20110701",
         endDate: "20230405",
@@ -483,7 +355,7 @@ const originData = {
       {
         from: "n3",
         to: "n7",
-        money: 150,
+        amount: 150,
         count: 8,
         startDate: "20110701",
         endDate: "20230405",
@@ -491,7 +363,7 @@ const originData = {
       {
         from: "n2",
         to: "n6",
-        money: 120,
+        amount: 120,
         count: 5,
         startDate: "20110701",
         endDate: "20230405",
@@ -499,7 +371,7 @@ const originData = {
       {
         from: "n3",
         to: "n4",
-        money: 190,
+        amount: 190,
         count: 5,
         startDate: "20110701",
         endDate: "20230405",
@@ -539,6 +411,10 @@ const originData = {
 };
 
 // 节点数据
+const data = {
+  nodes: [],
+  edges: [],
+};
 const buildNode = (id: String, label: String) => {
   return {
     id: id,
@@ -551,169 +427,102 @@ const buildNode = (id: String, label: String) => {
       nodeName: label,
       blur: false,
     },
-    ports: nodePorts(),
   };
-};
-const data = {
-  nodes:[],
-  edges: [
-    edges(
-      { cell: "n0", port: "moneyIn" },
-      { cell: "n1", port: "moneyIn" },
-      [
-        {
-          text: "张三 20笔 共2000万\n李四 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-        { text: "通话20次\n20240902-20240902", type: "phone" },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      "classic"
-    ),
-    edges(
-      { cell: "n2", port: "moneyIn" },
-      { cell: "n1", port: "moneyIn" },
-      [
-        {
-          text: "王五 20笔 共2000万\n李四 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      "classic"
-    ),
-    edges(
-      { cell: "n3", port: "moneyIn" },
-      { cell: "n2", port: "moneyIn" },
-      [
-        {
-          text: "王五 10笔 200万\n马六 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-        { text: "通话20次\n20240902-20240902", type: "phone" },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      "classic"
-    ),
-    edges(
-      { cell: "n4", port: "moneyIn" },
-      { cell: "n6", port: "moneyIn" },
-      [
-        {
-          text: "张一 10笔 200万\n张五 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      "classic"
-    ),
-    edges(
-      { cell: "n5", port: "moneyIn" },
-      { cell: "n3", port: "moneyIn" },
-      [
-        {
-          text: "张二 10笔 200万\n马六 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      "classic"
-    ),
-    edges(
-      { cell: "n3", port: "moneyIn" },
-      { cell: "n1", port: "moneyIn" },
-      [
-        {
-          text: "马六 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-        { text: "通话20次\n20240902-20240902", type: "phone" },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      null
-    ),
-    edges(
-      { cell: "n3", port: "moneyIn" },
-      { cell: "n7", port: "moneyIn" },
-      [
-        {
-          text: "张六 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      null
-    ),
-    edges(
-      { cell: "n2", port: "moneyIn" },
-      { cell: "n6", port: "moneyIn" },
-      [
-        {
-          text: "张五 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      null
-    ),
-    edges(
-      { cell: "n3", port: "moneyIn" },
-      { cell: "n4", port: "moneyIn" },
-      [
-        {
-          text: "张一 10笔 200万\n20240902-20240902",
-          type: "money",
-        },
-      ],
-      "#315098",
-      "pointConnector",
-      "classic",
-      null
-    ),
-    edges(
-      { cell: "n6", port: "moneyOut" },
-      { cell: "n1", port: "moneyOut" },
-      [
-        {
-          text: "通话20次\n20240902-20240902",
-          type: "phone",
-          position: 0.8,
-        },
-      ],
-      "#37a987",
-      "pointRightConnector"
-    ),
-  ],
 };
 originData.nodes.forEach(({ id, label }) => {
   data.nodes.push(buildNode(id, label)); // 使用解构提取 id 和 label
 });
 
+// 合并分支数据
+const mergeEdges = (edges) => {
+  const mergedEdges = {};
+
+  for (const type in edges) {
+    mergedEdges[type] = {};
+
+    for (const edge of edges[type]) {
+      const key =
+        edge.from < edge.to
+          ? `${edge.from}-${edge.to}`
+          : `${edge.to}-${edge.from}`;
+
+      if (!mergedEdges[type][key]) {
+        mergedEdges[type][key] = {
+          shape: "edge",
+          source: edge.from,
+          target: edge.to,
+          zIndex: 1,
+          connector: "pointConnector",
+          labels: [],
+          attrs: {
+            // line 是选择器名称，选中的边的 path 元素
+            line: {
+              stroke: "#315098",
+              strokeWidth: 0,
+              targetMarker: "classic",
+              sourceMarker: "classic",
+            },
+          },
+        };
+      }
+
+      mergedEdges[type][key].attrs.line.strokeWidth++;
+
+      // 标签数目
+      let size = mergedEdges[type][key].labels
+        ? mergedEdges[type][key].labels.length
+        : 0;
+
+      let distance;
+      let labelText;
+      let labelColor;
+      let currentOffset = -50 + size * 60;
+      if (type === "money") {
+        labelText = edge.from + " " + edge.count + "笔 共" + edge.amount + "笔";
+        labelColor = "#393f45";
+        distance = 0.5;
+      } else {
+        labelText = "通话" + edge.count + "次";
+        labelColor = "#37a987";
+        distance = 0.7;
+      }
+
+      mergedEdges[type][key].labels.push({
+        attrs: {
+          label: {
+            type: type,
+            text: labelText,
+            fill: labelColor,
+            stroke: labelColor,
+          },
+          rect: {
+            ref: "label",
+            fill: "rgba(0,0,0,.1)",
+          },
+        },
+        position: {
+          distance: distance,
+          offset: currentOffset, // 动态计算偏移量
+        },
+      });
+    }
+  }
+
+  for (const type in mergedEdges) {
+    mergedEdges[type] = Object.values(mergedEdges[type]);
+  }
+
+  return mergedEdges;
+};
+const mergedEdges = mergeEdges(originData.edges);
+data.edges = mergedEdges.money;
+data.edges.push(...mergedEdges.phone);
 const originalColors = {
   nodes: [],
   edges: [],
   labels: [],
 };
-const filter = {
-  name: "blur",
-  args: { x: 13, y: 16 },
-};
+
 //已知角度和斜边，求直角边
 function hypotenuse(long, angle) {
   //获得弧度
@@ -798,20 +607,19 @@ const renderNodes = () => {
   });
 
   const dagreLayout = new DagreLayout({
-  type: 'dagre',
-  rankdir: 'LR',
-  align: 'UR',
-  ranksep: 75,
-  nodesep: 55,
-})
-const model = dagreLayout.layout(data)
-debugger
-graph.value.fromJSON(model)
+    type: "dagre",
+    rankdir: "LR",
+    align: "UR",
+    ranksep: 75,
+    nodesep: 55,
+  });
+  const model = dagreLayout.layout(data);
+  debugger;
+  graph.value.fromJSON(model);
 
   // // 初始化节点
   // graph.value.addNodes(data.nodes);
   // graph.value.addEdges(data.edges);
-
 
   // 画布节点对齐
   onCenterContent();
@@ -881,8 +689,6 @@ graph.value.fromJSON(model)
           e.removeLabelAt(0);
         }
 
-        debugger;
-
         originLabel.forEach((label, index) => {
           label.attrs.label.stroke = filterColor;
           label.attrs.label.fill = filterColor;
@@ -921,9 +727,10 @@ graph.value.fromJSON(model)
         originLabel.forEach((label, index) => {
           label.attrs.rect.fill = "rgba(0,0,0,.1)";
           label.attrs.label.stroke =
-            label.attrs.label.type == "money" ? "#393f45" : "#37a987";
+            label.attrs.label.type === "money" ? "#393f45" : "#37a987";
           label.attrs.label.fill =
-            label.attrs.label.type == "money" ? "#393f45" : "#37a987";
+            label.attrs.label.type === "money" ? "#393f45" : "#37a987";
+          debugger;
           e.appendLabel(label);
         });
       }
@@ -944,9 +751,18 @@ const onCenrerNode = (nodeId: string) => {
     graph.value.centerCell(node);
   }
 };
+
 const searchForNode = (nodeName: string) => {
   const nodeId = nodeName.toLowerCase();
   onCenrerNode(nodeId);
+};
+const searchNodeByName = () => {
+  const allNodes = graph.value.getNodes();
+  allNodes.forEach((n) => {
+    if (n && n.getData() && n.getData().nodeName == nodeNameSearch.value) {
+      searchForNode(n.id);
+    }
+  });
 };
 
 /** 撤销重做 */
