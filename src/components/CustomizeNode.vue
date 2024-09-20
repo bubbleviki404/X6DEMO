@@ -15,9 +15,9 @@
         @keyup.enter.native="searchNodeByName"
         :suffix-icon="Search"
     /></el-col>
-    <!-- <el-col :span="4">
+    <el-col :span="4">
       <el-button type="primary" @click="exportToPng">导出图片</el-button>
-    </el-col> -->
+    </el-col>
   </el-row>
   <div id="graph_container"></div>
   <TeleportContainer />
@@ -27,7 +27,7 @@
 import * as htmlToImage from "html-to-image";
 import { Back, Right, Search } from "@element-plus/icons-vue";
 import { nextTick, onMounted, ref, onUnmounted } from "vue";
-import { Graph, Path, Cell } from "@antv/x6";
+import { Graph, Path } from "@antv/x6";
 import { Scroller } from "@antv/x6-plugin-scroller";
 import { Selection } from "@antv/x6-plugin-selection";
 import { Export } from "@antv/x6-plugin-export";
@@ -35,13 +35,10 @@ import { History } from "@antv/x6-plugin-history";
 import { register, getTeleport } from "@antv/x6-vue-shape";
 import NodeComponent from "./Node.vue";
 import { DagreLayout } from "@antv/layout";
-import { Connector } from "@antv/x6/lib/registry";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
 const graph = ref<Graph>();
-
-const nodeNameSearch = ref("");
 
 const graphRegister = () => {
   Graph.registerConnector(
@@ -614,7 +611,6 @@ const renderNodes = () => {
     nodesep: 55,
   });
   const model = dagreLayout.layout(data);
-  debugger;
   graph.value.fromJSON(model);
 
   // // 初始化节点
@@ -722,15 +718,12 @@ const renderNodes = () => {
           e.removeLabelAt(0);
         }
 
-        debugger;
-
         originLabel.forEach((label, index) => {
           label.attrs.rect.fill = "rgba(0,0,0,.1)";
           label.attrs.label.stroke =
             label.attrs.label.type === "money" ? "#393f45" : "#37a987";
           label.attrs.label.fill =
             label.attrs.label.type === "money" ? "#393f45" : "#37a987";
-          debugger;
           e.appendLabel(label);
         });
       }
@@ -752,6 +745,8 @@ const onCenrerNode = (nodeId: string) => {
   }
 };
 
+/** 节点查询 */
+const nodeNameSearch = ref("");
 const searchForNode = (nodeName: string) => {
   const nodeId = nodeName.toLowerCase();
   onCenrerNode(nodeId);
