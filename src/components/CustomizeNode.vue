@@ -35,197 +35,12 @@ import { History } from "@antv/x6-plugin-history";
 import { register, getTeleport } from "@antv/x6-vue-shape";
 import NodeComponent from "./Node.vue";
 import { DagreLayout } from "@antv/layout";
+import { circle } from "@antv/x6/lib/registry/marker/circle";
+import { Vertices } from "@antv/x6/lib/registry/tool/vertices";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
 const graph = ref<Graph>();
-
-const graphRegister = () => {
-  Graph.registerConnector(
-    "single-left-right-top-connector",
-    (s, e) => {
-      const v1 = hypotenuse(200, 70);
-      const c1 = { x: s.x + v1.linbian, y: s.y - v1.duibian };
-      const v2 = hypotenuse(200, 20);
-      const c2 = { x: e.x - v2.linbian, y: e.y + v2.duibian };
-
-      const pathArr = [];
-      pathArr.push(`M ${s.x} ${s.y}`);
-      pathArr.push(`C ${c1.x} ${c1.y} ${c2.x} ${c2.y}  ${e.x} ${e.y}`);
-      const paths = Path.normalize(pathArr.join(" "));
-      return paths;
-    },
-    true
-  );
-  Graph.registerConnector(
-    "single-left-right-bottom-connector",
-    (s, e) => {
-      const v1 = hypotenuse(200, 10);
-      const c1 = { x: s.x + v1.linbian, y: s.y - v1.duibian };
-      const v2 = hypotenuse(200, 70);
-      const c2 = { x: e.x - v2.linbian, y: e.y + v2.duibian };
-
-      const pathArr = [];
-      pathArr.push(`M ${s.x} ${s.y}`);
-      pathArr.push(`C ${c1.x} ${c1.y} ${c2.x} ${c2.y}  ${e.x} ${e.y}`);
-      const paths = Path.normalize(pathArr.join(" "));
-      return paths;
-    },
-    true
-  );
-};
-graphRegister();
-const pointConnector = (s, e) => {
-  // 判断角度所在象限
-  const angle = getAngle(s.x, s.y, e.x, e.y);
-  let quadrant = Math.ceil(angle / 90);
-  if (angle > 340 || angle < 20) quadrant = 41;
-  if (angle > 70 && angle < 110) quadrant = 12;
-  if (angle > 160 && angle < 210) quadrant = 23;
-  if (angle > 250 && angle < 290) quadrant = 34;
-
-  let c1 = { x: 0, y: 0 };
-  let c2 = { x: 0, y: 0 };
-  let v1, v2;
-
-  switch (quadrant) {
-    case 1:
-      v1 = hypotenuse(150, 50);
-      c1 = { x: s.x - v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(100, 20);
-      c2 = { x: e.x - v2.linbian, y: e.y - v2.duibian };
-      break;
-    case 2:
-      v1 = hypotenuse(150, 10);
-      c1 = { x: s.x - v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(100, 40);
-      c2 = { x: e.x - v2.linbian, y: e.y + v2.duibian };
-      break;
-    case 3:
-      v1 = hypotenuse(100, 10);
-      c1 = { x: s.x - v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(100, 40);
-      c2 = { x: e.x - v2.linbian, y: e.y - v2.duibian };
-      break;
-    case 4:
-      v1 = hypotenuse(100, 50);
-      c1 = { x: s.x - v1.duibian, y: s.y + v1.linbian };
-      c2 = { x: e.x - v1.duibian, y: e.y + v1.linbian };
-      break;
-    case 41:
-      v1 = hypotenuse(200, 70);
-      c1 = { x: s.x + v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(200, 20);
-      c2 = { x: e.x - v2.linbian, y: e.y + v2.duibian };
-      break;
-    case 12:
-      v1 = hypotenuse(100, 50);
-      c1 = { x: s.x - v1.duibian, y: s.y - v1.linbian };
-      c2 = { x: e.x - v1.duibian, y: e.y + v1.linbian };
-      break;
-    case 23:
-      v1 = hypotenuse(200, 10);
-      c1 = { x: s.x - v1.linbian, y: s.y + v1.duibian };
-      v2 = hypotenuse(200, 70);
-      c2 = { x: e.x + v2.linbian, y: e.y - v2.duibian };
-      break;
-    case 34:
-      v1 = hypotenuse(100, 50);
-      c1 = { x: s.x - v1.duibian, y: s.y + v1.linbian };
-      c2 = { x: e.x - v1.duibian, y: e.y - v1.linbian };
-      break;
-    default:
-      v1 = hypotenuse(150, 10);
-      c1 = { x: s.x - v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(100, 40);
-      c2 = { x: e.x - v2.linbian, y: e.y + v2.duibian };
-  }
-
-  const pathArr = [];
-  pathArr.push(`M ${s.x} ${s.y}`);
-  pathArr.push(`C ${c1.x} ${c1.y} ${c2.x} ${c2.y}  ${e.x} ${e.y}`);
-  const paths = Path.normalize(pathArr.join(" "));
-  return paths;
-};
-Graph.unregisterConnector("pointConnector");
-Graph.registerConnector("pointConnector", pointConnector);
-const pointRightConnector = (s, e) => {
-  // 判断角度所在象限
-  const angle = getAngle(s.x, s.y, e.x, e.y);
-  let quadrant = Math.ceil(angle / 90);
-  if (angle > 340 || angle < 20) quadrant = 41;
-  if (angle > 70 && angle < 110) quadrant = 12;
-  if (angle > 160 && angle < 210) quadrant = 23;
-  if (angle > 250 && angle < 290) quadrant = 34;
-
-  let c1 = { x: 0, y: 0 };
-  let c2 = { x: 0, y: 0 };
-  let v1, v2;
-
-  switch (quadrant) {
-    case 1:
-      v1 = hypotenuse(150, 20);
-      c1 = { x: s.x + v1.linbian, y: s.y + v1.duibian };
-      v2 = hypotenuse(100, 20);
-      c2 = { x: e.x + v2.linbian, y: e.y + v2.duibian };
-      break;
-    case 2:
-      v1 = hypotenuse(100, 50);
-      c1 = { x: s.x + v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(100, 30);
-      c2 = { x: e.x + v2.linbian, y: e.y - v2.duibian };
-      break;
-    case 3:
-      v1 = hypotenuse(100, 50);
-      c1 = { x: s.x + v1.linbian, y: s.y + v1.duibian };
-      v2 = hypotenuse(100, 30);
-      c2 = { x: e.x + v2.linbian, y: e.y + v2.duibian };
-      break;
-    case 4:
-      v1 = hypotenuse(100, 70);
-      c1 = { x: s.x + v1.duibian, y: s.y - v1.linbian };
-      v2 = hypotenuse(150, 40);
-      c2 = { x: e.x + v2.duibian, y: e.y - v2.linbian };
-
-      break;
-    case 41:
-      v1 = hypotenuse(200, 20);
-      c1 = { x: s.x + v1.linbian, y: s.y + v1.duibian };
-      v2 = hypotenuse(200, 70);
-      c2 = { x: e.x - v2.linbian, y: e.y - v2.duibian };
-      break;
-    case 12:
-      v1 = hypotenuse(100, 50);
-      c1 = { x: s.x + v1.duibian, y: s.y - v1.linbian };
-      c2 = { x: e.x + v1.duibian, y: e.y + v1.linbian };
-      break;
-    case 23:
-      v1 = hypotenuse(200, 70);
-      c1 = { x: s.x - v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(200, 10);
-      c2 = { x: e.x + v2.linbian, y: e.y + v2.duibian };
-
-      break;
-    case 34:
-      v1 = hypotenuse(100, 50);
-      c1 = { x: s.x + v1.duibian, y: s.y + v1.linbian };
-      c2 = { x: e.x + v1.duibian, y: e.y - v1.linbian };
-      break;
-    default:
-      v1 = hypotenuse(150, 10);
-      c1 = { x: s.x + v1.linbian, y: s.y - v1.duibian };
-      v2 = hypotenuse(100, 40);
-      c2 = { x: e.x + v2.linbian, y: e.y + v2.duibian };
-  }
-
-  const pathArr = [];
-  pathArr.push(`M ${s.x} ${s.y}`);
-  pathArr.push(`C ${c1.x} ${c1.y} ${c2.x} ${c2.y}  ${e.x} ${e.y}`);
-  const paths = Path.normalize(pathArr.join(" "));
-  return paths;
-};
-Graph.unregisterConnector("pointRightConnector");
-Graph.registerConnector("pointRightConnector", pointRightConnector);
 
 // 原始数据
 const originData = {
@@ -407,145 +222,260 @@ const originData = {
   },
 };
 
+// 画布颜色配置
+const graphColor = {
+  graph: "#F2F7FA",
+  filter: {
+    cell: "rgba(0,0,0,0)",
+    stroke: "rgba(0,0,0,.1)",
+  },
+  edge: {
+    label: {
+      text: {
+        money: "blue",
+        phone: "purple",
+      },
+
+      bg: {
+        money: "yellow",
+        phone: "pink",
+      },
+    },
+    line: {
+      money: "blue",
+      phone: "grey",
+    },
+    port: {
+      moneyIn: "blue",
+      moneyOut: "green",
+      phone: "purple",
+      stroke: "black",
+    },
+  },
+};
+
 // 节点数据
 const data = {
   nodes: [],
   edges: [],
 };
+
+// 构建标签
+const buildLabel = (edge: any) => {
+  let labelText;
+  let labelColor;
+  let labelBg;
+  if (edge.type === "money") {
+    labelText = "转账 " + edge.count + "笔 共" + edge.amount + "元";
+    labelColor = graphColor.edge.label.text.money;
+    labelBg = graphColor.edge.label.bg.money;
+  } else {
+    labelText = "通话" + edge.count + "次";
+    labelColor = graphColor.edge.label.text.phone;
+    labelBg = graphColor.edge.label.bg.phone;
+  }
+  return {
+    attrs: {
+      label: {
+        type: edge.type,
+        text: labelText,
+        fill: labelColor,
+        stroke: labelColor,
+      },
+      rect: {
+        ref: "label",
+        fill: labelBg,
+      },
+    },
+  };
+};
+
+// 节点端口数据
+const nodesPorts = {};
+
+// 构建边
+const buildEdge = (edge: any) => {
+  let currentNode = edge.from;
+  let nextNode = edge.to;
+
+  let lineColor = "";
+
+  let fromPortType = "";
+  let toPortType = "";
+
+  if (edge.type != "phone") {
+    lineColor = graphColor.edge.line.money;
+
+    fromPortType = "moneyOut" + "_" + nextNode;
+    toPortType = "moneyIn" + "_" + currentNode;
+
+    let fromArray = [];
+    let toArray = [];
+
+    if (nodesPorts[currentNode]) {
+      toArray = nodesPorts[currentNode]["to"];
+    } else {
+      nodesPorts[currentNode] = {};
+      nodesPorts[currentNode]["from"] = [];
+      nodesPorts[currentNode]["to"] = [];
+    }
+    toArray.push(nextNode);
+    nodesPorts[currentNode]["to"] = toArray;
+
+    if (nodesPorts[nextNode]) {
+      fromArray = nodesPorts[nextNode]["from"];
+    } else {
+      nodesPorts[nextNode] = {};
+      nodesPorts[nextNode]["from"] = [];
+      nodesPorts[nextNode]["to"] = [];
+    }
+    fromArray.push(currentNode);
+    nodesPorts[nextNode]["from"] = fromArray;
+  } else {
+    lineColor = graphColor.edge.line.phone;
+    fromPortType = "phone";
+    toPortType = "phone";
+  }
+
+  return {
+    shape: "edge",
+    source: { cell: edge.from, port: fromPortType },
+    target: { cell: edge.to, port: toPortType },
+    zIndex: 1,
+    labels: [buildLabel(edge)],
+    attrs: {
+      line: {
+        stroke: lineColor,
+        strokeWidth: 1,
+        targetMarker: "classic",
+      },
+    },
+    data: {
+      isFilter: false,
+    },
+    router: {
+      // name: "metro",
+      name: "manhattan",
+      // args:{
+      //   startDirections:['right'],
+      //   endDirections:['bottom']
+      // }
+    },
+    // connector: 'smooth',
+  };
+};
+
+originData.edges.phone.forEach((edge) => {
+  edge.type = "phone";
+  data.edges.push(buildEdge(edge));
+});
+
+originData.edges.money.forEach((edge) => {
+  edge.type = "money";
+  data.edges.push(buildEdge(edge));
+});
+
+// 节点端口构建
+const nodePorts = (currenNode: String) => {
+  const items = [{ group: "phone", id: "phone" }];
+  const ports = nodesPorts[currenNode];
+  if (ports) {
+    ports["from"].forEach((n) => {
+      let portId = "moneyIn" + "_" + n;
+      items.push({
+        group: "moneyIn",
+        id: portId,
+        // attrs: { text: { text: portId } },
+      });
+    });
+    ports["to"].forEach((n) => {
+      let portId = "moneyOut" + "_" + n;
+      items.push({
+        group: "moneyOut",
+        id: portId,
+        // attrs: { text: { text: portId } },
+      });
+    });
+  }
+
+  return {
+    items: items,
+    groups: {
+      moneyIn: {
+        position: { name: "left" },
+        attrs: {
+          circle: {
+            magnet: true,
+            stroke: graphColor.edge.port.stroke,
+            fill: graphColor.edge.port.moneyIn,
+            r: 2,
+          },
+        },
+        zIndex: 1,
+      },
+      moneyOut: {
+        position: { name: "right" },
+        attrs: {
+          circle: {
+            magnet: true,
+            stroke: graphColor.edge.port.stroke,
+            fill: graphColor.edge.port.moneyOut,
+            r: 2,
+          },
+        },
+        zIndex: 1,
+      },
+      phone: {
+        position: { name: "bottom" },
+        attrs: {
+          circle: {
+            magnet: true,
+            stroke: graphColor.edge.port.stroke,
+            fill: graphColor.edge.port.phone,
+            r: 2,
+          },
+        },
+        zIndex: 1,
+      },
+    },
+  };
+};
+
+// 节点构建
 const buildNode = (id: String, label: String) => {
   return {
     id: id,
     shape: "custom-vue-node",
     x: 0,
     y: 0,
-    label: label,
+    zIndex: 2,
+    label: label + "_" + id,
     data: {
       nodeId: id,
-      nodeName: label,
+      nodeName: label + "_" + id,
       blur: false,
     },
+    ports: nodePorts(id),
   };
 };
+
 originData.nodes.forEach(({ id, label }) => {
-  data.nodes.push(buildNode(id, label)); // 使用解构提取 id 和 label
+  data.nodes.push(buildNode(id, label));
 });
 
-// 合并分支数据
-const mergeEdges = (edges) => {
-  const mergedEdges = {};
-
-  for (const type in edges) {
-    mergedEdges[type] = {};
-
-    for (const edge of edges[type]) {
-      const key =
-        edge.from < edge.to
-          ? `${edge.from}-${edge.to}`
-          : `${edge.to}-${edge.from}`;
-
-      if (!mergedEdges[type][key]) {
-        mergedEdges[type][key] = {
-          shape: "edge",
-          source: edge.from,
-          target: edge.to,
-          zIndex: 1,
-          connector: "pointConnector",
-          labels: [],
-          attrs: {
-            // line 是选择器名称，选中的边的 path 元素
-            line: {
-              stroke: "#315098",
-              strokeWidth: 0,
-              targetMarker: "classic",
-              sourceMarker: "classic",
-            },
-          },
-        };
-      }
-
-      mergedEdges[type][key].attrs.line.strokeWidth++;
-
-      // 标签数目
-      let size = mergedEdges[type][key].labels
-        ? mergedEdges[type][key].labels.length
-        : 0;
-
-      let distance;
-      let labelText;
-      let labelColor;
-      let currentOffset = -50 + size * 60;
-      if (type === "money") {
-        labelText = edge.from + " " + edge.count + "笔 共" + edge.amount + "笔";
-        labelColor = "#393f45";
-        distance = 0.5;
-      } else {
-        labelText = "通话" + edge.count + "次";
-        labelColor = "#37a987";
-        distance = 0.7;
-      }
-
-      mergedEdges[type][key].labels.push({
-        attrs: {
-          label: {
-            type: type,
-            text: labelText,
-            fill: labelColor,
-            stroke: labelColor,
-          },
-          rect: {
-            ref: "label",
-            fill: "rgba(0,0,0,.1)",
-          },
-        },
-        position: {
-          distance: distance,
-          offset: currentOffset, // 动态计算偏移量
-        },
-      });
-    }
-  }
-
-  for (const type in mergedEdges) {
-    mergedEdges[type] = Object.values(mergedEdges[type]);
-  }
-
-  return mergedEdges;
-};
-const mergedEdges = mergeEdges(originData.edges);
-data.edges = mergedEdges.money;
-data.edges.push(...mergedEdges.phone);
 const originalColors = {
   nodes: [],
   edges: [],
   labels: [],
 };
 
-//已知角度和斜边，求直角边
-function hypotenuse(long, angle) {
-  //获得弧度
-  var radian = ((2 * Math.PI) / 360) * angle;
-  return {
-    duibian: Math.sin(radian) * long, //对边
-    linbian: Math.cos(radian) * long, //邻边
-  };
-}
-function getAngle(x1, y1, x2, y2) {
-  var x = x2 - x1;
-  var y = y2 - y1;
-  var atan = Math.atan2(y, x); // 使用 atan2 方法来获取角度
-  var angle = Math.round((atan * 180) / Math.PI); // 将弧度转换为角度
-  if (angle < 0) {
-    angle = angle + 360;
-  }
-  return angle > 0 ? 360 - angle : 360 + angle;
-}
-
+// 画布渲染
 const renderGraph = () => {
   // 初始化画布
   graph.value = new Graph({
     container: document.getElementById("graph_container")!,
     height: 480,
-    width: 960,
+    width: 1280,
     mousewheel: {
       enabled: true,
       modifiers: "ctrl",
@@ -554,7 +484,7 @@ const renderGraph = () => {
       minScale: 0.5,
     },
     background: {
-      color: "#F2F7FA",
+      color: graphColor.graph,
     },
   });
 
@@ -593,6 +523,7 @@ const renderGraph = () => {
   );
 };
 
+// 节点渲染
 const renderNodes = () => {
   // 注册自定义节点
   register({
@@ -660,23 +591,14 @@ const renderNodes = () => {
       }
     });
 
-    // 边：保存原始颜色 && 虚化与当前选中节点不相连的边
+    // 边：虚化与当前选中节点不相连的边
     allEdges.forEach((e) => {
-      if (!originalColors.edges[e.id]) {
-        originalColors.edges[e.id] = e.attr("line/stroke");
-
-        e.labels.forEach((label, index) => {
-          originalColors.labels[e.id] = originalColors.labels[e.id] || {};
-        });
-      }
       if (
         e.getSourceNode().id !== selectedNodeId &&
         e.getTargetNode().id !== selectedNodeId
-        // !connectedNodeIds.includes(e.getSourceNode().id) &&
-        // !connectedNodeIds.includes(e.getTargetNode().id)
       ) {
-        const filterColor = "rgba(0,0,0,0)";
-        e.attr("line/stroke", "rgba(0,0,0,.1)");
+        e.attr("line/stroke", graphColor.filter.stroke);
+        e.setAttrByPath("data/data/isFilter", true);
 
         const size = e.labels.length;
         const originLabel = e.labels;
@@ -686,9 +608,9 @@ const renderNodes = () => {
         }
 
         originLabel.forEach((label, index) => {
-          label.attrs.label.stroke = filterColor;
-          label.attrs.label.fill = filterColor;
-          label.attrs.rect.fill = filterColor;
+          label.attrs.label.stroke = graphColor.filter.cell;
+          label.attrs.label.fill = graphColor.filter.cell;
+          label.attrs.rect.fill = graphColor.filter.cell;
           e.appendLabel(label);
         });
       }
@@ -697,6 +619,7 @@ const renderNodes = () => {
 
   /** 节点取消选中事件 */
   graph.value.on("node:unselected", ({ node }) => {
+    debugger;
     const allNodes = graph.value.getNodes();
     allNodes.forEach((n) => {
       let data = n.getData();
@@ -708,9 +631,7 @@ const renderNodes = () => {
     const allEdges = graph.value.getEdges();
     // 恢复所有边的颜色
     allEdges.forEach((e) => {
-      if (originalColors.edges[e.id]) {
-        e.attr("line/stroke", originalColors.edges[e.id]); // 恢复边原始颜色
-
+      if (e.getAttrByPath("data/data/isFilter")) {
         const size = e.labels.length;
         const originLabel = e.labels;
 
@@ -719,11 +640,19 @@ const renderNodes = () => {
         }
 
         originLabel.forEach((label, index) => {
-          label.attrs.rect.fill = "rgba(0,0,0,.1)";
-          label.attrs.label.stroke =
-            label.attrs.label.type === "money" ? "#393f45" : "#37a987";
-          label.attrs.label.fill =
-            label.attrs.label.type === "money" ? "#393f45" : "#37a987";
+          let labelType = label.attrs.label.type;
+          if (labelType === "money") {
+            e.attr("line/stroke", graphColor.edge.line.money); // 恢复边原始颜色
+            label.attrs.label.stroke = graphColor.edge.label.text.money;
+            label.attrs.label.fill = graphColor.edge.label.text.money;
+            label.attrs.rect.fill = graphColor.edge.label.bg.money;
+          } else {
+            e.attr("line/stroke", graphColor.edge.line.phone);
+            label.attrs.label.stroke = graphColor.edge.label.text.phone;
+            label.attrs.label.fill = graphColor.edge.label.text.phone;
+            label.attrs.rect.fill = graphColor.edge.label.bg.phone;
+          }
+
           e.appendLabel(label);
         });
       }
