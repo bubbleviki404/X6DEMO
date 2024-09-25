@@ -37,190 +37,15 @@ import NodeComponent from "./Node.vue";
 import { DagreLayout } from "@antv/layout";
 import { circle } from "@antv/x6/lib/registry/marker/circle";
 import { Vertices } from "@antv/x6/lib/registry/tool/vertices";
+import { er } from "@antv/x6/lib/registry/router/er";
+import axios from "axios";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
 const graph = ref<Graph>();
 
 // 原始数据
-const originData = {
-  nodes: [
-    {
-      id: "n0",
-      label: "张三",
-    },
-    {
-      id: "n1",
-      label: "李四",
-    },
-    {
-      id: "n2",
-      label: "王五",
-    },
-    {
-      id: "n3",
-      label: "马六",
-    },
-    {
-      id: "n4",
-      label: "张一",
-    },
-    {
-      id: "n5",
-      label: "张二",
-    },
-    {
-      id: "n6",
-      label: "张五",
-    },
-    {
-      id: "n7",
-      label: "张六",
-    },
-    {
-      id: "n8",
-      label: "SOLO",
-    },
-  ],
-  edges: {
-    money: [
-      {
-        from: "n0",
-        to: "n1",
-        amount: 2000,
-        count: 20,
-        startDate: "20200101",
-        endDate: "20210207",
-      },
-      {
-        from: "n1",
-        to: "n0",
-        amount: 200,
-        count: 10,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-      {
-        from: "n2",
-        to: "n1",
-        amount: 2000,
-        count: 20,
-        startDate: "20200101",
-        endDate: "20210207",
-      },
-      {
-        from: "n1",
-        to: "n2",
-        amount: 200,
-        count: 10,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-      {
-        from: "n3",
-        to: "n2",
-        amount: 2000,
-        count: 10,
-        startDate: "20200101",
-        endDate: "20210207",
-      },
-      {
-        from: "n2",
-        to: "n3",
-        amount: 200,
-        count: 10,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-      {
-        from: "n4",
-        to: "n6",
-        amount: 2000,
-        count: 10,
-        startDate: "20200101",
-        endDate: "20210207",
-      },
-      {
-        from: "n6",
-        to: "n4",
-        amount: 200,
-        count: 10,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-      {
-        from: "n5",
-        to: "n3",
-        amount: 2000,
-        count: 10,
-        startDate: "20200101",
-        endDate: "20210207",
-      },
-      {
-        from: "n3",
-        to: "n5",
-        amount: 200,
-        count: 10,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-      {
-        from: "n3",
-        to: "n7",
-        amount: 150,
-        count: 8,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-      {
-        from: "n2",
-        to: "n6",
-        amount: 120,
-        count: 5,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-      {
-        from: "n3",
-        to: "n4",
-        amount: 190,
-        count: 5,
-        startDate: "20110701",
-        endDate: "20230405",
-      },
-    ],
-    phone: [
-      {
-        from: "n0",
-        to: "n1",
-        count: 20,
-        startDate: "20120701",
-        endDate: "20230405",
-      },
-      {
-        from: "n6",
-        to: "n1",
-        count: 20,
-        startDate: "20120701",
-        endDate: "20230405",
-      },
-      {
-        from: "n3",
-        to: "n1",
-        count: 20,
-        startDate: "20120701",
-        endDate: "20230405",
-      },
-      {
-        from: "n3",
-        to: "n2",
-        count: 20,
-        startDate: "20120701",
-        endDate: "20230405",
-      },
-    ],
-  },
-};
+const originData = ref(null);
 
 // 画布颜色配置
 const graphColor = {
@@ -354,8 +179,8 @@ const buildEdge = (edge: any) => {
       isFilter: false,
     },
     router: {
-      name: "metro",
-      // name: "manhattan",
+      // name: "metro",
+      name: "manhattan",
       // name:'orth'
       // args:{
       //   startDirections:['right'],
@@ -366,21 +191,15 @@ const buildEdge = (edge: any) => {
   };
 };
 
-originData.edges.phone.forEach((edge) => {
-  edge.type = "phone";
-  data.edges.push(buildEdge(edge));
-});
-
-originData.edges.money.forEach((edge) => {
-  edge.type = "money";
-  data.edges.push(buildEdge(edge));
-});
-
 // 节点端口构建
 const nodePorts = (currenNode: String) => {
   const items = [{ group: "phone", id: "phone" }];
   const ports = nodesPorts[currenNode];
   if (ports) {
+    if (currenNode == "6231139901000023075") {
+      console.log("from >>>", ports["from"]);
+      console.log("to >>>", ports["to"]);
+    }
     ports["from"].forEach((n) => {
       let portId = "moneyIn" + "_" + n;
       items.push({
@@ -460,10 +279,6 @@ const buildNode = (id: String, label: String) => {
   };
 };
 
-originData.nodes.forEach(({ id, label }) => {
-  data.nodes.push(buildNode(id, label));
-});
-
 const originalColors = {
   nodes: [],
   edges: [],
@@ -520,6 +335,7 @@ const renderGraph = () => {
       movable: true,
       strict: true,
       showNodeSelectionBox: true,
+      showEdgeSelectionBox:true
     })
   );
 };
@@ -549,8 +365,22 @@ const renderNodes = () => {
     shape: "custom-vue-node",
     inherit: "vue-shape",
     width: 80,
-    height: 100,
+    height:100,
     component: NodeComponent,
+  });
+
+  originData.value.edges.phone.forEach((edge) => {
+    edge.type = "phone";
+    data.edges.push(buildEdge(edge));
+  });
+
+  originData.value.edges.money.forEach((edge) => {
+    edge.type = "money";
+    data.edges.push(buildEdge(edge));
+  });
+
+  originData.value.nodes.forEach(({ id, label }) => {
+    data.nodes.push(buildNode(id, label));
   });
 
   // 渲染数据
@@ -695,7 +525,7 @@ const renderNodes = () => {
 
     // 过滤勾选节点
     if (selected && selected.length > 1) {
-      renderSelectionNodes(selected);
+      // renderSelectionNodes(selected);
     }
   });
 };
@@ -757,12 +587,289 @@ const exportToPng = () => {
   });
 };
 
+const dataToSend = {
+    "caseId": 1,
+    "queryList": [
+        {
+            "cardNo": "511025198802091421",
+            "tradeCard": [
+                "6231139901000023075"
+            ]
+        },
+        {
+            "cardNo": "511025198802092843",
+            "tradeCard": [
+                "18272179"
+            ]
+        },
+        {
+            "cardNo": "511025198802092844",
+            "tradeCard": [
+                "2088002822573801"
+            ]
+        },
+        {
+            "cardNo": "511025198802092845",
+            "tradeCard": [
+                "6228480086109452374"
+            ]
+        },
+        {
+            "cardNo": "511025198802092846",
+            "tradeCard": [
+                "6222021001037345441"
+            ]
+        },
+        {
+            "cardNo": "511025198802092847",
+            "tradeCard": [
+                "6228480088424598873"
+            ]
+        },
+        {
+            "cardNo": "511025198802092848",
+            "tradeCard": [
+                "622908398178980019"
+            ]
+        },
+        {
+            "cardNo": "511025198802092849",
+            "tradeCard": [
+                "6230580000058864633"
+            ]
+        },
+        {
+            "cardNo": "511025198802092840",
+            "tradeCard": [
+                "6228480086300701975"
+            ]
+        },
+        {
+            "cardNo": "511025198802092842",
+            "tradeCard": [
+                "62262289035973856226"
+            ]
+        }
+    ]
+};
+const customAxios = axios.create({
+  baseURL: import.meta.env.VITE_API_URL as any,
+  timeout: 50000,
+  headers: {
+    "Content-Type": "application/json",
+    Authorization:
+      "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzI2NzI2NzIxLCJleHAiOjE3MjczMzE1MjF9.PyMtQMWlL_ooKtxkkxc9lleUnKJtQrzWzECBDwUKRof34hKVE1ZlG24FjAMAbgAbPwh-xWAtTuZ97h6XF1vu7w",
+  },
+});
+const sendRequest = async () => {
+  try {
+    const response = await customAxios.post("/data/trade/query", dataToSend);
+    return response.data.result;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
 onMounted(async () => {
   nextTick(() => {
-    renderGraph();
-    if (graph && graph.value) {
-      renderNodes();
+    async function process() {
+      const responseData = await sendRequest();
+      if (responseData) {
+        originData.value = {
+          nodes: responseData.nodes,
+          edges: {
+            money: responseData.money,
+            phone: [],
+          },
+        };
+        // use default
+        // originData.value = {
+        //   nodes: [
+        //     {
+        //       id: "n0",
+        //       label: "张三",
+        //     },
+        //     {
+        //       id: "n1",
+        //       label: "李四",
+        //     },
+        //     {
+        //       id: "n2",
+        //       label: "王五",
+        //     },
+        //     {
+        //       id: "n3",
+        //       label: "马六",
+        //     },
+        //     {
+        //       id: "n4",
+        //       label: "张一",
+        //     },
+        //     {
+        //       id: "n5",
+        //       label: "张二",
+        //     },
+        //     {
+        //       id: "n6",
+        //       label: "张五",
+        //     },
+        //     {
+        //       id: "n7",
+        //       label: "张六",
+        //     },
+        //     {
+        //       id: "n8",
+        //       label: "SOLO",
+        //     },
+        //   ],
+        //   edges: {
+        //     money: [
+        //       {
+        //         from: "n0",
+        //         to: "n1",
+        //         amount: 2000,
+        //         count: 20,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n1",
+        //         to: "n0",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n2",
+        //         to: "n1",
+        //         amount: 2000,
+        //         count: 20,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n1",
+        //         to: "n2",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n2",
+        //         amount: 2000,
+        //         count: 10,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n2",
+        //         to: "n3",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n4",
+        //         to: "n6",
+        //         amount: 2000,
+        //         count: 10,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n6",
+        //         to: "n4",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n5",
+        //         to: "n3",
+        //         amount: 2000,
+        //         count: 10,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n5",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n7",
+        //         amount: 150,
+        //         count: 8,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n2",
+        //         to: "n6",
+        //         amount: 120,
+        //         count: 5,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n4",
+        //         amount: 190,
+        //         count: 5,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //     ],
+        //     phone: [
+        //       {
+        //         from: "n0",
+        //         to: "n1",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n6",
+        //         to: "n1",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n1",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n2",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //     ],
+        //   },
+        // };
+
+        renderGraph();
+        if (graph && graph.value) {
+          renderNodes();
+        }
+      }
     }
+    process();
   });
 });
 onUnmounted(() => {});

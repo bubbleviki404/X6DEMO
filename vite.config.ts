@@ -17,19 +17,19 @@ export default defineConfig({
     },
     base: './', // 设置打包路径
     server: {
-		host:'192.168.110.37',
+		host:'192.168.110.95',
         port: 4000, // 设置服务启动端口号
         open: true, // 设置服务启动时是否自动打开浏览器
         cors: true, // 允许跨域
 
         // 设置代理，根据我们项目实际情况配置
-        // proxy: {
-        //   '/apc': {
-        //     target: 'http://192.168.110.39:8088/',
-        //     changeOrigin: true,
-        //     secure: false,
-        //     // rewrite: (path) => path.replace('/apc/', '/')
-        //   }
-        // }
+        proxy: {
+          '/data': {
+            target: 'http://192.168.110.39:8080/',
+            changeOrigin: true,
+            secure: false,
+            // rewrite: (path) => path.replace('/apc/', '/')
+          }
+        }
     }
 })
