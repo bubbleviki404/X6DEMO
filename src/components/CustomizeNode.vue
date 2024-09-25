@@ -354,14 +354,15 @@ const buildEdge = (edge: any) => {
       isFilter: false,
     },
     router: {
-      // name: "metro",
-      name: "manhattan",
+      name: "metro",
+      // name: "manhattan",
+      // name:'orth'
       // args:{
       //   startDirections:['right'],
       //   endDirections:['bottom']
       // }
     },
-    // connector: 'smooth',
+    connector: 'rounded',
   };
 };
 
