@@ -362,7 +362,7 @@ const buildEdge = (edge: any) => {
       //   endDirections:['bottom']
       // }
     },
-    connector: 'rounded',
+    connector: "rounded",
   };
 };
 
@@ -524,6 +524,24 @@ const renderGraph = () => {
   );
 };
 
+// 布局
+const dagreLayout = new DagreLayout({
+  type: "dagre",
+  rankdir: "LR",
+  align: "UR",
+  ranksep: 75,
+  nodesep: 55,
+});
+
+// 渲染数据
+const renderData = () => {
+  const model = dagreLayout.layout(data);
+  graph.value.fromJSON(model);
+
+  // 画布居中
+  onCenterContent();
+};
+
 // 节点渲染
 const renderNodes = () => {
   // 注册自定义节点
@@ -535,22 +553,12 @@ const renderNodes = () => {
     component: NodeComponent,
   });
 
-  const dagreLayout = new DagreLayout({
-    type: "dagre",
-    rankdir: "LR",
-    align: "UR",
-    ranksep: 75,
-    nodesep: 55,
-  });
-  const model = dagreLayout.layout(data);
-  graph.value.fromJSON(model);
+  // 渲染数据
+  renderData();
 
   // // 初始化节点
   // graph.value.addNodes(data.nodes);
   // graph.value.addEdges(data.edges);
-
-  // 画布节点对齐
-  onCenterContent();
 
   // 节点-双击：节点居中
   graph.value.on("node:dblclick", ({ view }) => {
@@ -658,6 +666,37 @@ const renderNodes = () => {
         });
       }
     });
+  });
+
+  /** 渲染勾选节点 */
+  const renderSelectionNodes = (selected) => {
+    const selectedNodes = selected.map((e) => e.id);
+    // 过滤选中节点
+    const nodes = data.nodes.filter((n) => selectedNodes.includes(n.id));
+    console.log("selectedNodes >>>>", nodes);
+    // 过滤选中节点相关边
+    const edges = data.edges.filter(
+      (e) =>
+        selectedNodes.includes(e.source.cell) &&
+        selectedNodes.includes(e.target.cell)
+    );
+    console.log("selectedEdges >>>>", edges);
+
+    data.nodes = nodes;
+    data.edges = edges;
+
+    renderData();
+  };
+
+  /** 框选事件 */
+  graph.value.on("selection:changed", ({ selected }) => {
+    debugger;
+    console.log("seletion >>>>", selected);
+
+    // 过滤勾选节点
+    if (selected && selected.length > 1) {
+      renderSelectionNodes(selected);
+    }
   });
 };
 
