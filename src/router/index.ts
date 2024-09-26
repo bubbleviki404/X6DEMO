@@ -6,10 +6,16 @@ import DEMO3 from '../demo/3_component.vue';
 import DEMO4 from '../demo/GADemo.vue';
 import DEMO5 from '../demo/X6Demo.vue';
 import CustomizeNode from '../components/CustomizeNode.vue';
+import CustomizeNode2 from '../components/CustomizeNode2.vue';
+import CustomizeNode3 from '../components/CustomizeNode3.vue';
+import CustomizeNodeD from '../components/CustomizeNodeD.vue';
 import Node from '../components/Node.vue';
 const routes = [
   { path: '/', component: Graph },
   { path: '/1', component: CustomizeNode },
+  { path: '/2', component: CustomizeNode2 },
+  { path: '/3', component: CustomizeNode3 },
+  { path: '/d', component: CustomizeNodeD },
   { path: '/demo/1', component: DEMO1 },
   { path: '/demo/2', component: DEMO2 },
   { path: '/demo/3', component: DEMO3 },

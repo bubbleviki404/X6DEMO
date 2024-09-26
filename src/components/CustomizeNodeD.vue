@@ -179,8 +179,8 @@ const buildEdge = (edge: any) => {
       isFilter: false,
     },
     router: {
-      // name: "metro",
-      name: "manhattan",
+      name: "metro",
+      // name: "manhattan",
       // name:'orth'
       // args:{
       //   startDirections:['right'],
@@ -673,189 +673,203 @@ const sendRequest = async () => {
 
 onMounted(async () => {
   nextTick(() => {
-    originData.value = {
-          nodes: [
-            {
-              id: "n0",
-              label: "张三",
-            },
-            {
-              id: "n1",
-              label: "李四",
-            },
-            {
-              id: "n2",
-              label: "王五",
-            },
-            {
-              id: "n3",
-              label: "马六",
-            },
-            {
-              id: "n4",
-              label: "张一",
-            },
-            {
-              id: "n5",
-              label: "张二",
-            },
-            {
-              id: "n6",
-              label: "张五",
-            },
-            {
-              id: "n7",
-              label: "张六",
-            },
-            {
-              id: "n8",
-              label: "SOLO",
-            },
-          ],
+    async function process() {
+      const responseData = await sendRequest();
+      if (responseData) {
+        originData.value = {
+          nodes: responseData.nodes,
           edges: {
-            money: [
-              {
-                from: "n0",
-                to: "n1",
-                amount: 2000,
-                count: 20,
-                startDate: "20200101",
-                endDate: "20210207",
-              },
-              {
-                from: "n1",
-                to: "n0",
-                amount: 200,
-                count: 10,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-              {
-                from: "n2",
-                to: "n1",
-                amount: 2000,
-                count: 20,
-                startDate: "20200101",
-                endDate: "20210207",
-              },
-              {
-                from: "n1",
-                to: "n2",
-                amount: 200,
-                count: 10,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-              {
-                from: "n3",
-                to: "n2",
-                amount: 2000,
-                count: 10,
-                startDate: "20200101",
-                endDate: "20210207",
-              },
-              {
-                from: "n2",
-                to: "n3",
-                amount: 200,
-                count: 10,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-              {
-                from: "n4",
-                to: "n6",
-                amount: 2000,
-                count: 10,
-                startDate: "20200101",
-                endDate: "20210207",
-              },
-              {
-                from: "n6",
-                to: "n4",
-                amount: 200,
-                count: 10,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-              {
-                from: "n5",
-                to: "n3",
-                amount: 2000,
-                count: 10,
-                startDate: "20200101",
-                endDate: "20210207",
-              },
-              {
-                from: "n3",
-                to: "n5",
-                amount: 200,
-                count: 10,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-              {
-                from: "n3",
-                to: "n7",
-                amount: 150,
-                count: 8,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-              {
-                from: "n2",
-                to: "n6",
-                amount: 120,
-                count: 5,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-              {
-                from: "n3",
-                to: "n4",
-                amount: 190,
-                count: 5,
-                startDate: "20110701",
-                endDate: "20230405",
-              },
-            ],
-            phone: [
-              {
-                from: "n0",
-                to: "n1",
-                count: 20,
-                startDate: "20120701",
-                endDate: "20230405",
-              },
-              {
-                from: "n6",
-                to: "n1",
-                count: 20,
-                startDate: "20120701",
-                endDate: "20230405",
-              },
-              {
-                from: "n3",
-                to: "n1",
-                count: 20,
-                startDate: "20120701",
-                endDate: "20230405",
-              },
-              {
-                from: "n3",
-                to: "n2",
-                count: 20,
-                startDate: "20120701",
-                endDate: "20230405",
-              },
-            ],
+            money: responseData.money,
+            phone: [],
           },
         };
+        // use default
+        // originData.value = {
+        //   nodes: [
+        //     {
+        //       id: "n0",
+        //       label: "张三",
+        //     },
+        //     {
+        //       id: "n1",
+        //       label: "李四",
+        //     },
+        //     {
+        //       id: "n2",
+        //       label: "王五",
+        //     },
+        //     {
+        //       id: "n3",
+        //       label: "马六",
+        //     },
+        //     {
+        //       id: "n4",
+        //       label: "张一",
+        //     },
+        //     {
+        //       id: "n5",
+        //       label: "张二",
+        //     },
+        //     {
+        //       id: "n6",
+        //       label: "张五",
+        //     },
+        //     {
+        //       id: "n7",
+        //       label: "张六",
+        //     },
+        //     {
+        //       id: "n8",
+        //       label: "SOLO",
+        //     },
+        //   ],
+        //   edges: {
+        //     money: [
+        //       {
+        //         from: "n0",
+        //         to: "n1",
+        //         amount: 2000,
+        //         count: 20,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n1",
+        //         to: "n0",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n2",
+        //         to: "n1",
+        //         amount: 2000,
+        //         count: 20,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n1",
+        //         to: "n2",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n2",
+        //         amount: 2000,
+        //         count: 10,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n2",
+        //         to: "n3",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n4",
+        //         to: "n6",
+        //         amount: 2000,
+        //         count: 10,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n6",
+        //         to: "n4",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n5",
+        //         to: "n3",
+        //         amount: 2000,
+        //         count: 10,
+        //         startDate: "20200101",
+        //         endDate: "20210207",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n5",
+        //         amount: 200,
+        //         count: 10,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n7",
+        //         amount: 150,
+        //         count: 8,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n2",
+        //         to: "n6",
+        //         amount: 120,
+        //         count: 5,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n4",
+        //         amount: 190,
+        //         count: 5,
+        //         startDate: "20110701",
+        //         endDate: "20230405",
+        //       },
+        //     ],
+        //     phone: [
+        //       {
+        //         from: "n0",
+        //         to: "n1",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n6",
+        //         to: "n1",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n1",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //       {
+        //         from: "n3",
+        //         to: "n2",
+        //         count: 20,
+        //         startDate: "20120701",
+        //         endDate: "20230405",
+        //       },
+        //     ],
+        //   },
+        // };
 
         renderGraph();
         if (graph && graph.value) {
           renderNodes();
         }
+      }
+    }
+    process();
   });
 });
 onUnmounted(() => {});

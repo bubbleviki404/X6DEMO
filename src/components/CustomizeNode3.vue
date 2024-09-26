@@ -179,8 +179,8 @@ const buildEdge = (edge: any) => {
       isFilter: false,
     },
     router: {
-      // name: "metro",
-      name: "manhattan",
+      name: "metro",
+      // name: "manhattan",
       // name:'orth'
       // args:{
       //   startDirections:['right'],
@@ -344,7 +344,7 @@ const renderGraph = () => {
 const dagreLayout = new DagreLayout({
   type: "dagre",
   rankdir: "LR",
-  align: "UR",
+  align:'DL',
   ranksep: 75,
   nodesep: 55,
 });
