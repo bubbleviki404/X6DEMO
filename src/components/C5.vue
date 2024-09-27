@@ -26,8 +26,8 @@
 <script lang="ts" setup>
 import * as htmlToImage from "html-to-image";
 import { Back, Right, Search } from "@element-plus/icons-vue";
-import { nextTick, onMounted, ref, onUnmounted } from "vue";
-import { Graph, Path } from "@antv/x6";
+import { nextTick, onMounted, ref, onUnmounted, ReactiveFlags } from "vue";
+import { EdgeView, Graph, Path } from "@antv/x6";
 import { Scroller } from "@antv/x6-plugin-scroller";
 import { Selection } from "@antv/x6-plugin-selection";
 import { Export } from "@antv/x6-plugin-export";
@@ -39,10 +39,17 @@ import { circle } from "@antv/x6/lib/registry/marker/circle";
 import { Vertices } from "@antv/x6/lib/registry/tool/vertices";
 import { er } from "@antv/x6/lib/registry/router/er";
 import axios from "axios";
+import { bottom, left, right } from "@antv/x6/lib/registry/port-layout/line";
+import { Connector } from "@antv/x6/lib/registry";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
 const graph = ref<Graph>();
+const ranksep = 110;
+const nodesep = 150;
+const maxAmount = ref(0);
+const minAmount = ref(0);
+const sortedTransactions = [];
 
 // 原始数据
 const originData = ref(null);
@@ -57,17 +64,17 @@ const graphColor = {
   edge: {
     label: {
       text: {
-        money: "blue",
+        money: "#36121e",
         phone: "purple",
       },
 
       bg: {
-        money: "yellow",
-        phone: "pink",
+        // money: "yellow",
+        // phone: "pink",
       },
     },
     line: {
-      money: "blue",
+      money: "#36121e",
       phone: "grey",
     },
     port: {
@@ -127,6 +134,7 @@ const buildEdge = (edge: any) => {
 
   let fromPortType = "";
   let toPortType = "";
+  let paddingBottom = 30;
 
   if (edge.type != "phone") {
     lineColor = graphColor.edge.line.money;
@@ -145,6 +153,7 @@ const buildEdge = (edge: any) => {
       nodesPorts[currentNode]["to"] = [];
     }
     toArray.push(nextNode);
+
     nodesPorts[currentNode]["to"] = toArray;
 
     if (nodesPorts[nextNode]) {
@@ -156,10 +165,27 @@ const buildEdge = (edge: any) => {
     }
     fromArray.push(currentNode);
     nodesPorts[nextNode]["from"] = fromArray;
+
+    paddingBottom = (toArray.length + fromArray.length) * paddingBottom;
   } else {
     lineColor = graphColor.edge.line.phone;
     fromPortType = "phone";
     toPortType = "phone";
+  }
+
+  if (edge.amount) {
+    if (edge.amount > maxAmount.value) {
+      maxAmount.value = edge.amount;
+    }
+
+    if ((minAmount.value < 1)) {
+      minAmount.value = edge.amount;
+    }
+
+    if (edge.amount < minAmount.value) {
+      minAmount.value = edge.amount;
+    }
+    sortedTransactions.push(edge.amount);
   }
 
   return {
@@ -177,6 +203,7 @@ const buildEdge = (edge: any) => {
     },
     data: {
       isFilter: false,
+      amount: edge.amount,
     },
     router: {
       name: "metro",
@@ -184,11 +211,10 @@ const buildEdge = (edge: any) => {
       // name:'orth'
       args: {
         padding: {
-          // right: 20,
-          // left: 20,
-          // bottom: paddingBottom,
-          // top: paddingBottom,
+          top: 45,
+          left: 45,
         },
+        endDirections: ["left"],
       },
     },
     connector: {
@@ -197,6 +223,7 @@ const buildEdge = (edge: any) => {
         radius: 30,
       },
     },
+    // connector: "pointConnector",
   };
 };
 
@@ -234,7 +261,7 @@ const nodePorts = (currenNode: String) => {
         position: { name: "left" },
         attrs: {
           circle: {
-            magnet: true,
+            magnet: false,
             stroke: graphColor.edge.port.stroke,
             fill: graphColor.edge.port.moneyIn,
             r: 2,
@@ -246,7 +273,7 @@ const nodePorts = (currenNode: String) => {
         position: { name: "right" },
         attrs: {
           circle: {
-            magnet: true,
+            magnet: false,
             stroke: graphColor.edge.port.stroke,
             fill: graphColor.edge.port.moneyOut,
             r: 2,
@@ -258,7 +285,7 @@ const nodePorts = (currenNode: String) => {
         position: { name: "bottom" },
         attrs: {
           circle: {
-            magnet: true,
+            magnet: false,
             stroke: graphColor.edge.port.stroke,
             fill: graphColor.edge.port.phone,
             r: 2,
@@ -299,8 +326,6 @@ const renderGraph = () => {
   // 初始化画布
   graph.value = new Graph({
     container: document.getElementById("graph_container")!,
-    height: 480,
-    width: 1280,
     mousewheel: {
       enabled: true,
       modifiers: "ctrl",
@@ -317,6 +342,9 @@ const renderGraph = () => {
   graph.value.use(
     new Scroller({
       enabled: true,
+      height: 640,
+      width: 1024,
+      autoResize: true,
     })
   );
 
@@ -353,19 +381,88 @@ const renderGraph = () => {
 const dagreLayout = new DagreLayout({
   type: "dagre",
   rankdir: "LR",
-  align: "UR",
-  ranksep: 75,
-  nodesep: 55,
+  align: "DR",
+  ranksep: ranksep,
+  nodesep: nodesep,
 });
+
+const getTransactionLevel = (amount) => {
+  const range = (maxAmount.value - minAmount.value) / 5;
+  debugger
+  if (amount >= minAmount.value && amount < minAmount.value + range) {
+    return 1;
+  } else if (amount >= minAmount.value + range && amount < minAmount.value + 2 * range) {
+    return 1.5;
+  } else if (amount >= minAmount.value + 2 * range && amount < minAmount.value + 3 * range) {
+    return 2;
+  } else if (amount >= minAmount.value + 3 * range && amount < minAmount.value + 4 * range) {
+    return 2.5;
+  } else if (amount >= minAmount.value + 4 * range && amount <= maxAmount.value) {
+    return 3;
+  } else {
+    return null;
+  }
+};
 
 // 渲染数据
 const renderData = () => {
   const model = dagreLayout.layout(data);
+  const nodePositionMap = {};
+  const axisMap = {
+    x: {},
+    y: {},
+  };
+
+  model.nodes.forEach((e) => {
+    nodePositionMap[e.id] = e;
+
+    // 同X轴：5的偏差
+    if (!axisMap.x[e.x]) {
+      axisMap.x[e.x] = [];
+    }
+    axisMap.x[e.x].push(e);
+    if (axisMap.x[e.x].length > 1) {
+      e.x += axisMap.x[e.x].length * 5;
+    }
+
+    // 同y轴：20的偏差（2个节点以上）
+    if (!axisMap.y[e.y]) {
+      axisMap.y[e.y] = [];
+    }
+    axisMap.y[e.y].push(e);
+    if (axisMap.y[e.y].length > 2) {
+      e.y += axisMap.y[e.y].length * 5;
+    }
+
+    // if (axisMap.y[e.y].length > 2) {
+    //   let portSize = 1;
+    //   if (e.ports && e.ports.items && e.ports.items.length) {
+    //     portSize += e.ports.items.length;
+    //   }
+    //   e.y += portSize * 20;
+    // }
+  });
+
+  model.edges.forEach((e) => {
+    let width = getTransactionLevel(e.data.amount);
+    if(width){
+      e.attrs.line.strokeWidth = width;
+      console.log("e.attrs.line.strokeWidth >>> ",e.attrs.line.strokeWidth);
+    }
+    
+   
+  });
+
+  debugger;
+  console.log(sortedTransactions);
+
   graph.value.fromJSON(model);
 
-  debugger
+  // 画布缩放
+  graph.value.zoom(-0.6);
+
   // 画布居中
-  onCenterContent();
+  onCenrerNode("n6");
 };
 
 // 节点渲染
@@ -468,7 +565,6 @@ const renderNodes = () => {
 
   /** 节点取消选中事件 */
   graph.value.on("node:unselected", ({ node }) => {
-    debugger;
     const allNodes = graph.value.getNodes();
     allNodes.forEach((n) => {
       let data = n.getData();
@@ -530,7 +626,6 @@ const renderNodes = () => {
 
   /** 框选事件 */
   graph.value.on("selection:changed", ({ selected }) => {
-    debugger;
     console.log("seletion >>>>", selected);
 
     // 过滤勾选节点
@@ -597,269 +692,240 @@ const exportToPng = () => {
   });
 };
 
-const dataToSend = {
-  caseId: 1,
-  queryList: [
-    {
-      cardNo: "511025198802091421",
-      tradeCard: ["6231139901000023075"],
-    },
-    {
-      cardNo: "511025198802092843",
-      tradeCard: ["18272179"],
-    },
-    {
-      cardNo: "511025198802092844",
-      tradeCard: ["2088002822573801"],
-    },
-    {
-      cardNo: "511025198802092845",
-      tradeCard: ["6228480086109452374"],
-    },
-    {
-      cardNo: "511025198802092846",
-      tradeCard: ["6222021001037345441"],
-    },
-    {
-      cardNo: "511025198802092847",
-      tradeCard: ["6228480088424598873"],
-    },
-    {
-      cardNo: "511025198802092848",
-      tradeCard: ["622908398178980019"],
-    },
-    {
-      cardNo: "511025198802092849",
-      tradeCard: ["6230580000058864633"],
-    },
-    {
-      cardNo: "511025198802092840",
-      tradeCard: ["6228480086300701975"],
-    },
-    {
-      cardNo: "511025198802092842",
-      tradeCard: ["62262289035973856226"],
-    },
-  ],
+const customSort = (arr) => {
+  // 统计每个 from 和 to 的出现次数
+  const fromCountMap = new Map();
+  const toCountMap = new Map();
+  arr.forEach((item) => {
+    if (!fromCountMap.has(item.from)) {
+      fromCountMap.set(item.from, 0);
+    }
+    fromCountMap.set(item.from, fromCountMap.get(item.from) + 1);
+
+    if (!toCountMap.has(item.to)) {
+      toCountMap.set(item.to, 0);
+    }
+    toCountMap.set(item.to, toCountMap.get(item.to) + 1);
+  });
+
+  return arr.sort((a, b) => {
+    const fromCountDiff = fromCountMap.get(b.from) - fromCountMap.get(a.from);
+    console.log(
+      `Comparing ${a.from} and ${b.from}, fromCountDiff: ${fromCountDiff}`
+    );
+    if (fromCountDiff !== 0) {
+      return fromCountDiff;
+    }
+    const toCountDiff = toCountMap.get(b.to) - toCountMap.get(a.to);
+    console.log(`Comparing ${a.to} and ${b.to}, toCountDiff: ${toCountDiff}`);
+    return toCountDiff;
+  });
 };
-const customAxios = axios.create({
-  baseURL: import.meta.env.VITE_API_URL as any,
-  timeout: 50000,
-  headers: {
-    "Content-Type": "application/json",
-    Authorization:
-      "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzI3MzQ1Mjk2LCJleHAiOjE3Mjc5NTAwOTZ9.sTP6Wmd8WxAcQ-7jaHvsCoEooTVnRmQQ6uuzYAwKKrUDjQRzY3dua6F0b5BUs9Owaof4KPFUNiDAP6NuMPAxAQ",
-  },
-});
-const sendRequest = async () => {
-  try {
-    const response = await customAxios.post("/data/trade/query", dataToSend);
-    return response.data.result;
-  } catch (error) {
-    console.log(error);
-    return null;
-  }
+const readData = () => {
+  const money = [
+    {
+      from: "n0",
+      to: "n8",
+      amount: 906000,
+      count: 5,
+      startDate: "2015-08-17",
+      endDate: "2016-10-02",
+    },
+    {
+      from: "n1",
+      to: "n2",
+      amount: 21500,
+      count: 3,
+      startDate: "2023-10-21",
+      endDate: "2024-01-06",
+    },
+    {
+      from: "n1",
+      to: "n7",
+      amount: 21300,
+      count: 86,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n1",
+      to: "n3",
+      amount: 150000,
+      count: 141,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n2",
+      to: "n9",
+      amount: 5,
+      count: 3235,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n2",
+      to: "n3",
+      amount: 1030,
+      count: 1,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n2",
+      to: "n6",
+      amount: 8220,
+      count: 5,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n2",
+      to: "n1",
+      amount: 69200,
+      count: 6,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n3",
+      to: "n7",
+      amount: 15400,
+      count: 42,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n3",
+      to: "n1",
+      amount: 3095.18,
+      count: 87,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n7",
+      to: "n1",
+      amount: 150,
+      count: 3,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n7",
+      to: "n3",
+      amount: 2771.5,
+      count: 35,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n8",
+      to: "n0",
+      amount: 984,
+      count: 62,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n7",
+      amount: 7980.02,
+      count: 3,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n6",
+      amount: 11800,
+      count: 4,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n3",
+      amount: 99900,
+      count: 40,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n2",
+      amount: 20300,
+      count: 18,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+  ];
+  console.log(money);
+
+  const nodes = [
+    {
+      id: "n0",
+      label: "陈凤姣",
+    },
+    {
+      id: "n1",
+      label: "程以生（个人）",
+    },
+    {
+      id: "n2",
+      label: "丁勇",
+    },
+    {
+      id: "n3",
+      label: "丁勇（个人）",
+    },
+    {
+      id: "n4",
+      label: "高博",
+    },
+    {
+      id: "n5",
+      label: "林裕荣（个人）",
+    },
+    {
+      id: "n6",
+      label: "徐鹏",
+    },
+    {
+      id: "n7",
+      label: "徐鹏（个人）",
+    },
+    {
+      id: "n8",
+      label: "张文红",
+    },
+    {
+      id: "n9",
+      label: "其他",
+    },
+  ];
+  const phone = [];
+  const sortedData = customSort(money);
+
+  console.log(sortedData);
+
+  return {
+    nodes: nodes,
+    edges: {
+      money: sortedData,
+      phone: phone,
+    },
+  };
 };
 
 onMounted(async () => {
   nextTick(() => {
-    async function process() {
-      const responseData = await sendRequest();
-      if (responseData) {
-        originData.value = {
-          nodes: responseData.nodes,
-          edges: {
-            money: responseData.money,
-            phone: [],
-          },
-        };
-        // use default
-        // originData.value = {
-        //   nodes: [
-        //     {
-        //       id: "n0",
-        //       label: "张三",
-        //     },
-        //     {
-        //       id: "n1",
-        //       label: "李四",
-        //     },
-        //     {
-        //       id: "n2",
-        //       label: "王五",
-        //     },
-        //     {
-        //       id: "n3",
-        //       label: "马六",
-        //     },
-        //     {
-        //       id: "n4",
-        //       label: "张一",
-        //     },
-        //     {
-        //       id: "n5",
-        //       label: "张二",
-        //     },
-        //     {
-        //       id: "n6",
-        //       label: "张五",
-        //     },
-        //     {
-        //       id: "n7",
-        //       label: "张六",
-        //     },
-        //     {
-        //       id: "n8",
-        //       label: "SOLO",
-        //     },
-        //   ],
-        //   edges: {
-        //     money: [
-        //       {
-        //         from: "n0",
-        //         to: "n1",
-        //         amount: 2000,
-        //         count: 20,
-        //         startDate: "20200101",
-        //         endDate: "20210207",
-        //       },
-        //       {
-        //         from: "n1",
-        //         to: "n0",
-        //         amount: 200,
-        //         count: 10,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n2",
-        //         to: "n1",
-        //         amount: 2000,
-        //         count: 20,
-        //         startDate: "20200101",
-        //         endDate: "20210207",
-        //       },
-        //       {
-        //         from: "n1",
-        //         to: "n2",
-        //         amount: 200,
-        //         count: 10,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n3",
-        //         to: "n2",
-        //         amount: 2000,
-        //         count: 10,
-        //         startDate: "20200101",
-        //         endDate: "20210207",
-        //       },
-        //       {
-        //         from: "n2",
-        //         to: "n3",
-        //         amount: 200,
-        //         count: 10,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n4",
-        //         to: "n6",
-        //         amount: 2000,
-        //         count: 10,
-        //         startDate: "20200101",
-        //         endDate: "20210207",
-        //       },
-        //       {
-        //         from: "n6",
-        //         to: "n4",
-        //         amount: 200,
-        //         count: 10,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n5",
-        //         to: "n3",
-        //         amount: 2000,
-        //         count: 10,
-        //         startDate: "20200101",
-        //         endDate: "20210207",
-        //       },
-        //       {
-        //         from: "n3",
-        //         to: "n5",
-        //         amount: 200,
-        //         count: 10,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n3",
-        //         to: "n7",
-        //         amount: 150,
-        //         count: 8,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n2",
-        //         to: "n6",
-        //         amount: 120,
-        //         count: 5,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n3",
-        //         to: "n4",
-        //         amount: 190,
-        //         count: 5,
-        //         startDate: "20110701",
-        //         endDate: "20230405",
-        //       },
-        //     ],
-        //     phone: [
-        //       {
-        //         from: "n0",
-        //         to: "n1",
-        //         count: 20,
-        //         startDate: "20120701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n6",
-        //         to: "n1",
-        //         count: 20,
-        //         startDate: "20120701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n3",
-        //         to: "n1",
-        //         count: 20,
-        //         startDate: "20120701",
-        //         endDate: "20230405",
-        //       },
-        //       {
-        //         from: "n3",
-        //         to: "n2",
-        //         count: 20,
-        //         startDate: "20120701",
-        //         endDate: "20230405",
-        //       },
-        //     ],
-        //   },
-        // };
+    originData.value = readData();
 
-        renderGraph();
-        if (graph && graph.value) {
-          renderNodes();
-        }
-      }
+    renderGraph();
+    if (graph && graph.value) {
+      renderNodes();
     }
-    process();
   });
 });
 onUnmounted(() => {});

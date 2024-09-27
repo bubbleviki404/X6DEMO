@@ -24,57 +24,123 @@
 </template>
 
 <script lang="ts" setup>
-import * as htmlToImage from 'html-to-image';
-import { Back, Right, Search } from '@element-plus/icons-vue';
-import { nextTick, onMounted, ref, onUnmounted } from 'vue';
-import { Graph, Path } from '@antv/x6';
-import { Scroller } from '@antv/x6-plugin-scroller';
-import { Selection } from '@antv/x6-plugin-selection';
-import { Export } from '@antv/x6-plugin-export';
-import { History } from '@antv/x6-plugin-history';
-import { register, getTeleport } from '@antv/x6-vue-shape';
-import NodeComponent from './Node.vue';
-import { DagreLayout } from '@antv/layout';
-import { circle } from '@antv/x6/lib/registry/marker/circle';
-import { Vertices } from '@antv/x6/lib/registry/tool/vertices';
-import { er } from '@antv/x6/lib/registry/router/er';
-import axios from 'axios';
+import * as htmlToImage from "html-to-image";
+import { Back, Right, Search } from "@element-plus/icons-vue";
+import { nextTick, onMounted, ref, onUnmounted } from "vue";
+import { EdgeView, Graph, Path } from "@antv/x6";
+import { Scroller } from "@antv/x6-plugin-scroller";
+import { Selection } from "@antv/x6-plugin-selection";
+import { Export } from "@antv/x6-plugin-export";
+import { History } from "@antv/x6-plugin-history";
+import { register, getTeleport } from "@antv/x6-vue-shape";
+import NodeComponent from "./Node.vue";
+import { DagreLayout } from "@antv/layout";
+import { circle } from "@antv/x6/lib/registry/marker/circle";
+import { Vertices } from "@antv/x6/lib/registry/tool/vertices";
+import { er } from "@antv/x6/lib/registry/router/er";
+import axios from "axios";
+import { bottom, left, right } from "@antv/x6/lib/registry/port-layout/line";
+import { Connector } from "@antv/x6/lib/registry";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
 const graph = ref<Graph>();
+const ranksep = 100;
+const nodesep = 45;
+
+// 计算角度
+function getAngle(x1, y1, x2, y2) {
+  var x = x2 - x1;
+  var y = y2 - y1;
+  var atan = Math.atan2(y, x); // 使用 atan2 方法来获取角度
+  var angle = Math.round((atan * 180) / Math.PI); // 将弧度转换为角度
+  if (angle < 0) {
+    angle = angle + 360;
+  }
+  return angle > 0 ? 360 - angle : 360 + angle;
+}
+//已知角度和斜边，求直角边
+function hypotenuse(long, angle) {
+  //获得弧度
+  var radian = ((2 * Math.PI) / 360) * angle;
+  return {
+    duibian: Math.sin(radian) * long, //对边
+    linbian: Math.cos(radian) * long, //邻边
+  };
+}
+const pointConnector = (s, e) => {
+  // 1.判断角度所在象限
+  const angle = getAngle(s.x, s.y, e.x, e.y);
+  let v1;
+  let c1;
+  let c2;
+  if (angle > -1 && angle < 30) {
+    v1 = hypotenuse(nodesep * 2, 10);
+    c1 = { x: s.x + v1.linbian, y: s.y + v1.duibian };
+    c2 = { x: e.x - v1.linbian, y: e.y + v1.duibian };
+  }
+  if (angle > 29 && angle < 45) {
+    v1 = hypotenuse(nodesep * 2, 30);
+    c1 = { x: s.x + v1.linbian, y: s.y + v1.duibian };
+    c2 = { x: e.x - v1.linbian, y: e.y + v1.duibian };
+  }  if (angle > 44 && angle < 75) {
+    v1 = hypotenuse(nodesep * 2, 30);
+    c1 = { x: s.x + v1.linbian, y: s.y - v1.duibian };
+    c2 = { x: e.x - v1.linbian, y: e.y - v1.duibian };
+  } if (angle > 74 && angle < 90) {
+    v1 = hypotenuse(nodesep * 2, 30);
+    c1 = { x: s.x + v1.linbian, y: s.y - v1.duibian };
+    c2 = { x: e.x - v1.linbian, y: e.y - v1.duibian };
+  } if (angle > 89 && angle < 180) {
+    v1 = hypotenuse(nodesep * 2, 30);
+    c1 = { x: s.x + v1.linbian + 160, y: s.y + v1.duibian +ranksep+100 };
+    c2 = { x: e.x - v1.linbian - 160, y: e.y + v1.duibian + ranksep+100  };
+  } else {
+    v1 = hypotenuse(nodesep * 2, 10);
+    c1 = { x: s.x + v1.linbian, y: s.y + v1.duibian };
+    c2 = { x: e.x - v1.linbian, y: e.y + v1.duibian };
+  }
+
+  const pathArr = [];
+  pathArr.push(`M ${s.x} ${s.y}`);
+  pathArr.push(`C ${c1.x} ${c1.y} ${c2.x} ${c2.y}  ${e.x} ${e.y}`);
+  const paths = Path.normalize(pathArr.join(" "));
+  return paths;
+};
+Graph.unregisterConnector("pointConnector");
+Graph.registerConnector("pointConnector", pointConnector);
 
 // 原始数据
 const originData = ref(null);
 
 // 画布颜色配置
 const graphColor = {
-  graph: '#F2F7FA',
+  graph: "#F2F7FA",
   filter: {
-    cell: 'rgba(0,0,0,0)',
-    stroke: 'rgba(0,0,0,.1)',
+    cell: "rgba(0,0,0,0)",
+    stroke: "rgba(0,0,0,.1)",
   },
   edge: {
     label: {
       text: {
-        money: 'blue',
-        phone: 'purple',
+        money: "blue",
+        phone: "purple",
       },
 
       bg: {
-        money: 'yellow',
-        phone: 'pink',
+        money: "yellow",
+        phone: "pink",
       },
     },
     line: {
-      money: 'blue',
-      phone: 'grey',
+      money: "blue",
+      phone: "grey",
     },
     port: {
-      moneyIn: 'blue',
-      moneyOut: 'green',
-      phone: 'purple',
-      stroke: 'black',
+      moneyIn: "blue",
+      moneyOut: "green",
+      phone: "purple",
+      stroke: "black",
     },
   },
 };
@@ -90,12 +156,12 @@ const buildLabel = (edge: any) => {
   let labelText;
   let labelColor;
   let labelBg;
-  if (edge.type === 'money') {
-    labelText = '转账 ' + edge.count + '笔 共' + edge.amount + '元';
+  if (edge.type === "money") {
+    labelText = "转账 " + edge.count + "笔 共" + edge.amount + "元";
     labelColor = graphColor.edge.label.text.money;
     labelBg = graphColor.edge.label.bg.money;
   } else {
-    labelText = '通话' + edge.count + '次';
+    labelText = "通话" + edge.count + "次";
     labelColor = graphColor.edge.label.text.phone;
     labelBg = graphColor.edge.label.bg.phone;
   }
@@ -108,7 +174,7 @@ const buildLabel = (edge: any) => {
         stroke: labelColor,
       },
       rect: {
-        ref: 'label',
+        ref: "label",
         fill: labelBg,
       },
     },
@@ -123,95 +189,116 @@ const buildEdge = (edge: any) => {
   let currentNode = edge.from;
   let nextNode = edge.to;
 
-  let lineColor = '';
+  let lineColor = "";
 
-  let fromPortType = '';
-  let toPortType = '';
+  let fromPortType = "";
+  let toPortType = "";
+  let paddingBottom = 30;
 
-  if (edge.type != 'phone') {
+  if (edge.type != "phone") {
     lineColor = graphColor.edge.line.money;
 
-    fromPortType = 'moneyOut' + '_' + nextNode;
-    toPortType = 'moneyIn' + '_' + currentNode;
+    fromPortType = "moneyOut" + "_" + nextNode;
+    toPortType = "moneyIn" + "_" + currentNode;
 
     let fromArray = [];
     let toArray = [];
 
     if (nodesPorts[currentNode]) {
-      toArray = nodesPorts[currentNode]['to'];
+      toArray = nodesPorts[currentNode]["to"];
     } else {
       nodesPorts[currentNode] = {};
-      nodesPorts[currentNode]['from'] = [];
-      nodesPorts[currentNode]['to'] = [];
+      nodesPorts[currentNode]["from"] = [];
+      nodesPorts[currentNode]["to"] = [];
     }
     toArray.push(nextNode);
-    nodesPorts[currentNode]['to'] = toArray;
+
+    nodesPorts[currentNode]["to"] = toArray;
 
     if (nodesPorts[nextNode]) {
-      fromArray = nodesPorts[nextNode]['from'];
+      fromArray = nodesPorts[nextNode]["from"];
     } else {
       nodesPorts[nextNode] = {};
-      nodesPorts[nextNode]['from'] = [];
-      nodesPorts[nextNode]['to'] = [];
+      nodesPorts[nextNode]["from"] = [];
+      nodesPorts[nextNode]["to"] = [];
     }
     fromArray.push(currentNode);
-    nodesPorts[nextNode]['from'] = fromArray;
+    nodesPorts[nextNode]["from"] = fromArray;
+
+    paddingBottom = (toArray.length + fromArray.length) * paddingBottom;
   } else {
     lineColor = graphColor.edge.line.phone;
-    fromPortType = 'phone';
-    toPortType = 'phone';
+    fromPortType = "phone";
+    toPortType = "phone";
   }
 
   return {
-    shape: 'edge',
+    shape: "edge",
     source: { cell: edge.from, port: fromPortType },
     target: { cell: edge.to, port: toPortType },
+    // source: { cell: edge.from, anchor:{name:'right'} },
+    // target: { cell: edge.to, anchor:{name:'left'} },
     zIndex: 1,
     labels: [buildLabel(edge)],
     attrs: {
       line: {
         stroke: lineColor,
         strokeWidth: 1,
-        targetMarker: 'classic',
+        targetMarker: "classic",
       },
     },
     data: {
       isFilter: false,
     },
+    // vertices:[
+    //   {x:100,y:300},
+    //   {x:300,y:120},
+    // ],
     router: {
-      name: 'metro',
+      name: "metro",
       // name: "manhattan",
       // name:'orth'
-      // args:{
-      //   startDirections:['right'],
-      //   endDirections:['bottom']
-      // }
+      args: {
+        padding: {
+          right: 20,
+          left: 20,
+          bottom: paddingBottom,
+          top: paddingBottom,
+        },
+      },
     },
-    connector: 'rounded',
+    // connector:
+    // {
+    //   name: "rounded",
+    //   args: {
+    //     radius: 80,
+    //   },
+    // },
+    connector: "pointConnector",
   };
 };
 
 // 节点端口构建
 const nodePorts = (currenNode: String) => {
-  const items = [{ group: 'phone', id: 'phone' }];
+  const items = [{ group: "phone", id: "phone" }];
   const ports = nodesPorts[currenNode];
   if (ports) {
-    if (currenNode == '6231139901000023075') {
-      console.log('from >>>', ports['from']);
-      console.log('to >>>', ports['to']);
+    if (currenNode == "6231139901000023075") {
+      console.log("from >>>", ports["from"]);
+      console.log("to >>>", ports["to"]);
     }
-    ports['from'].forEach((n) => {
-      let portId = 'moneyIn' + '_' + n;
+    ports["from"].forEach((n) => {
+      let portId = "moneyIn" + "_" + n;
       items.push({
-        group: 'moneyIn',
+        group: "moneyIn",
         id: portId,
         // attrs: { text: { text: portId } },
       });
     });
-    ports['to'].forEach((n) => {
-      let portId = 'moneyOut' + '_' + n;
+    ports["to"].forEach((n) => {
+      let portId = "moneyOut" + "_" + n;
       items.push({
-        group: 'moneyOut',
+        group: "moneyOut",
         id: portId,
         // attrs: { text: { text: portId } },
       });
@@ -222,10 +309,10 @@ const nodePorts = (currenNode: String) => {
     items: items,
     groups: {
       moneyIn: {
-        position: { name: 'left' },
+        position: { name: "left" },
         attrs: {
           circle: {
-            magnet: true,
+            magnet: false,
             stroke: graphColor.edge.port.stroke,
             fill: graphColor.edge.port.moneyIn,
             r: 2,
@@ -234,10 +321,10 @@ const nodePorts = (currenNode: String) => {
         zIndex: 1,
       },
       moneyOut: {
-        position: { name: 'right' },
+        position: { name: "right" },
         attrs: {
           circle: {
-            magnet: true,
+            magnet: false,
             stroke: graphColor.edge.port.stroke,
             fill: graphColor.edge.port.moneyOut,
             r: 2,
@@ -246,10 +333,10 @@ const nodePorts = (currenNode: String) => {
         zIndex: 1,
       },
       phone: {
-        position: { name: 'bottom' },
+        position: { name: "bottom" },
         attrs: {
           circle: {
-            magnet: true,
+            magnet: false,
             stroke: graphColor.edge.port.stroke,
             fill: graphColor.edge.port.phone,
             r: 2,
@@ -265,17 +352,17 @@ const nodePorts = (currenNode: String) => {
 const buildNode = (id: String, label: String) => {
   return {
     id: id,
-    shape: 'custom-vue-node',
+    shape: "custom-vue-node",
     x: 0,
     y: 0,
     zIndex: 2,
-    label: label + '_' + id,
+    label: label + "_" + id,
     data: {
       nodeId: id,
-      nodeName: label + '_' + id,
+      nodeName: label + "_" + id,
       blur: false,
     },
-    // ports: nodePorts(id),
+    ports: nodePorts(id),
   };
 };
 
@@ -289,12 +376,12 @@ const originalColors = {
 const renderGraph = () => {
   // 初始化画布
   graph.value = new Graph({
-    container: document.getElementById('graph_container')!,
+    container: document.getElementById("graph_container")!,
     height: 480,
     width: 1280,
     mousewheel: {
       enabled: true,
-      modifiers: 'ctrl',
+      modifiers: "ctrl",
       factor: 1.1,
       maxScale: 1.5,
       minScale: 0.5,
@@ -313,7 +400,7 @@ const renderGraph = () => {
 
   // 历史记录
   graph.value.use(new History({ enabled: true }));
-  graph.value.on('history:change', () => {
+  graph.value.on("history:change", () => {
     canUndo.value = graph.value.canUndo();
     canRedo.value = graph.value.canRedo();
   });
@@ -322,7 +409,7 @@ const renderGraph = () => {
   graph.value.use(new Export());
 
   // 双击-空白画布：画布内容居中对齐
-  graph.value.on('blank:dblclick', () => {
+  graph.value.on("blank:dblclick", () => {
     onCenterContent();
   });
 
@@ -342,11 +429,11 @@ const renderGraph = () => {
 
 // 布局
 const dagreLayout = new DagreLayout({
-  type: 'dagre',
-  rankdir: 'LR',
-  align: 'DR',
-  ranksep: 75,
-  nodesep: 55,
+  type: "dagre",
+  rankdir: "LR",
+  align: "DR",
+  ranksep: ranksep,
+  nodesep: nodesep,
 });
 
 // 渲染数据
@@ -362,20 +449,20 @@ const renderData = () => {
 const renderNodes = () => {
   // 注册自定义节点
   register({
-    shape: 'custom-vue-node',
-    inherit: 'vue-shape',
+    shape: "custom-vue-node",
+    inherit: "vue-shape",
     width: 80,
     height: 100,
     component: NodeComponent,
   });
 
   originData.value.edges.phone.forEach((edge) => {
-    edge.type = 'phone';
+    edge.type = "phone";
     data.edges.push(buildEdge(edge));
   });
 
   originData.value.edges.money.forEach((edge) => {
-    edge.type = 'money';
+    edge.type = "money";
     data.edges.push(buildEdge(edge));
   });
 
@@ -391,15 +478,15 @@ const renderNodes = () => {
   // graph.value.addEdges(data.edges);
 
   // 节点-双击：节点居中
-  graph.value.on('node:dblclick', ({ view }) => {
+  graph.value.on("node:dblclick", ({ view }) => {
     if (view && view.cell && view.cell.id) {
       onCenrerNode(view.cell.id);
     }
   });
 
   /** 节点选中事件 */
-  graph.value.on('node:selected', ({ node }) => {
-    console.log('node:selected:', node);
+  graph.value.on("node:selected", ({ node }) => {
+    console.log("node:selected:", node);
 
     // 获取当前选中的节点 ID
     const selectedNodeId = node.id;
@@ -436,8 +523,8 @@ const renderNodes = () => {
         e.getSourceNode().id !== selectedNodeId &&
         e.getTargetNode().id !== selectedNodeId
       ) {
-        e.attr('line/stroke', graphColor.filter.stroke);
-        e.setAttrByPath('data/data/isFilter', true);
+        e.attr("line/stroke", graphColor.filter.stroke);
+        e.setAttrByPath("data/data/isFilter", true);
 
         const size = e.labels.length;
         const originLabel = e.labels;
@@ -457,8 +544,7 @@ const renderNodes = () => {
   });
 
   /** 节点取消选中事件 */
-  graph.value.on('node:unselected', ({ node }) => {
-    debugger;
+  graph.value.on("node:unselected", ({ node }) => {
     const allNodes = graph.value.getNodes();
     allNodes.forEach((n) => {
       let data = n.getData();
@@ -470,7 +556,7 @@ const renderNodes = () => {
     const allEdges = graph.value.getEdges();
     // 恢复所有边的颜色
     allEdges.forEach((e) => {
-      if (e.getAttrByPath('data/data/isFilter')) {
+      if (e.getAttrByPath("data/data/isFilter")) {
         const size = e.labels.length;
         const originLabel = e.labels;
 
@@ -480,13 +566,13 @@ const renderNodes = () => {
 
         originLabel.forEach((label, index) => {
           let labelType = label.attrs.label.type;
-          if (labelType === 'money') {
-            e.attr('line/stroke', graphColor.edge.line.money); // 恢复边原始颜色
+          if (labelType === "money") {
+            e.attr("line/stroke", graphColor.edge.line.money); // 恢复边原始颜色
             label.attrs.label.stroke = graphColor.edge.label.text.money;
             label.attrs.label.fill = graphColor.edge.label.text.money;
             label.attrs.rect.fill = graphColor.edge.label.bg.money;
           } else {
-            e.attr('line/stroke', graphColor.edge.line.phone);
+            e.attr("line/stroke", graphColor.edge.line.phone);
             label.attrs.label.stroke = graphColor.edge.label.text.phone;
             label.attrs.label.fill = graphColor.edge.label.text.phone;
             label.attrs.rect.fill = graphColor.edge.label.bg.phone;
@@ -503,14 +589,14 @@ const renderNodes = () => {
     const selectedNodes = selected.map((e) => e.id);
     // 过滤选中节点
     const nodes = data.nodes.filter((n) => selectedNodes.includes(n.id));
-    console.log('selectedNodes >>>>', nodes);
+    console.log("selectedNodes >>>>", nodes);
     // 过滤选中节点相关边
     const edges = data.edges.filter(
       (e) =>
         selectedNodes.includes(e.source.cell) &&
         selectedNodes.includes(e.target.cell)
     );
-    console.log('selectedEdges >>>>', edges);
+    console.log("selectedEdges >>>>", edges);
 
     data.nodes = nodes;
     data.edges = edges;
@@ -519,9 +605,8 @@ const renderNodes = () => {
   };
 
   /** 框选事件 */
-  graph.value.on('selection:changed', ({ selected }) => {
-    debugger;
-    console.log('seletion >>>>', selected);
+  graph.value.on("selection:changed", ({ selected }) => {
+    console.log("seletion >>>>", selected);
 
     // 过滤勾选节点
     if (selected && selected.length > 1) {
@@ -545,7 +630,7 @@ const onCenrerNode = (nodeId: string) => {
 };
 
 /** 节点查询 */
-const nodeNameSearch = ref('');
+const nodeNameSearch = ref("");
 const searchForNode = (nodeName: string) => {
   const nodeId = nodeName.toLowerCase();
   onCenrerNode(nodeId);
@@ -578,202 +663,244 @@ const exportToPng = () => {
   // graph.value.exportPNG("导出测试", {
   //   quality: 1,
   // });
-  const container = document.getElementsByClassName('x6-graph-svg')[0];
+  const container = document.getElementsByClassName("x6-graph-svg")[0];
   htmlToImage.toPng(container as HTMLElement).then((dataUri) => {
-    const link = document.createElement('a');
-    link.download = '导出.png';
+    const link = document.createElement("a");
+    link.download = "导出.png";
     link.href = dataUri;
     link.click();
   });
 };
 
+const customSort = (arr) => {
+  // 统计每个 from 和 to 的出现次数
+  const fromCountMap = new Map();
+  const toCountMap = new Map();
+  arr.forEach((item) => {
+    if (!fromCountMap.has(item.from)) {
+      fromCountMap.set(item.from, 0);
+    }
+    fromCountMap.set(item.from, fromCountMap.get(item.from) + 1);
+
+    if (!toCountMap.has(item.to)) {
+      toCountMap.set(item.to, 0);
+    }
+    toCountMap.set(item.to, toCountMap.get(item.to) + 1);
+  });
+
+  return arr.sort((a, b) => {
+    const fromCountDiff = fromCountMap.get(b.from) - fromCountMap.get(a.from);
+    console.log(
+      `Comparing ${a.from} and ${b.from}, fromCountDiff: ${fromCountDiff}`
+    );
+    if (fromCountDiff !== 0) {
+      return fromCountDiff;
+    }
+    const toCountDiff = toCountMap.get(b.to) - toCountMap.get(a.to);
+    console.log(`Comparing ${a.to} and ${b.to}, toCountDiff: ${toCountDiff}`);
+    return toCountDiff;
+  });
+};
+const readData = () => {
+  const money = [
+    {
+      from: "n0",
+      to: "n8",
+      amount: 906000,
+      count: 5,
+      startDate: "2015-08-17",
+      endDate: "2016-10-02",
+    },
+    {
+      from: "n1",
+      to: "n2",
+      amount: 21500,
+      count: 3,
+      startDate: "2023-10-21",
+      endDate: "2024-01-06",
+    },
+    {
+      from: "n1",
+      to: "n7",
+      amount: 21300,
+      count: 86,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n1",
+      to: "n3",
+      amount: 150000,
+      count: 141,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n2",
+      to: "n9",
+      amount: 5,
+      count: 3235,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n2",
+      to: "n3",
+      amount: 1030,
+      count: 1,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n2",
+      to: "n6",
+      amount: 8220,
+      count: 5,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n2",
+      to: "n1",
+      amount: 69200,
+      count: 6,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n3",
+      to: "n7",
+      amount: 15400,
+      count: 42,
+      startDate: "20200101",
+      endDate: "20210207",
+    },
+    {
+      from: "n3",
+      to: "n1",
+      amount: 3095.18,
+      count: 87,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n7",
+      to: "n1",
+      amount: 150,
+      count: 3,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n7",
+      to: "n3",
+      amount: 2771.5,
+      count: 35,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n8",
+      to: "n0",
+      amount: 984,
+      count: 62,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n7",
+      amount: 7980.02,
+      count: 3,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n6",
+      amount: 11800,
+      count: 4,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n3",
+      amount: 99900,
+      count: 40,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+    {
+      from: "n9",
+      to: "n2",
+      amount: 20300,
+      count: 18,
+      startDate: "20110701",
+      endDate: "20230405",
+    },
+  ];
+  console.log(money);
+
+  const nodes = [
+    {
+      id: "n0",
+      label: "陈凤姣",
+    },
+    {
+      id: "n1",
+      label: "程以生（个人）",
+    },
+    {
+      id: "n2",
+      label: "丁勇",
+    },
+    {
+      id: "n3",
+      label: "丁勇（个人）",
+    },
+    {
+      id: "n4",
+      label: "高博",
+    },
+    {
+      id: "n5",
+      label: "林裕荣（个人）",
+    },
+    {
+      id: "n6",
+      label: "徐鹏",
+    },
+    {
+      id: "n7",
+      label: "徐鹏（个人）",
+    },
+    {
+      id: "n8",
+      label: "张文红",
+    },
+    {
+      id: "n9",
+      label: "其他",
+    },
+  ];
+  const phone = [];
+  const sortedData = customSort(money);
+
+  console.log(sortedData);
+
+  return {
+    nodes: nodes,
+    edges: {
+      money: sortedData,
+      phone: phone,
+    },
+  };
+};
+
 onMounted(async () => {
   nextTick(() => {
-    originData.value = {
-      nodes: [
-        {
-          id: 'n0',
-          label: '陈凤姣',
-        },
-        {
-          id: 'n1',
-          label: '程以生（个人）',
-        },
-        {
-          id: 'n2',
-          label: '丁勇',
-        },
-        {
-          id: 'n3',
-          label: '丁勇（个人）',
-        },
-        {
-          id: 'n4',
-          label: '高博',
-        },
-        {
-          id: 'n5',
-          label: '林裕荣（个人）',
-        },
-        {
-          id: 'n6',
-          label: '徐鹏',
-        },
-        {
-          id: 'n7',
-          label: '徐鹏（个人）',
-        },
-        {
-          id: 'n8',
-          label: '张文红',
-        },
-        {
-          id: 'n9',
-          label: '其他',
-        },
-      ],
-      edges: {
-        money: [
-          {
-            from: 'n0',
-            to: 'n8',
-            amount: 906000,
-            count: 5,
-            startDate: '2015-08-17',
-            endDate: '2016-10-02',
-          },
-          {
-            from: 'n1',
-            to: 'n2',
-            amount: 21500,
-            count: 3,
-            startDate: '2023-10-21',
-            endDate: '2024-01-06',
-          },
-          {
-            from: 'n1',
-            to: 'n7',
-            amount: 21300,
-            count: 86,
-            startDate: '20200101',
-            endDate: '20210207',
-          },
-          {
-            from: 'n1',
-            to: 'n3',
-            amount: 150000,
-            count: 141,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n2',
-            to: 'n9',
-            amount: 5,
-            count: 3235,
-            startDate: '20200101',
-            endDate: '20210207',
-          },
-          {
-            from: 'n2',
-            to: 'n3',
-            amount: 1030,
-            count: 1,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n2',
-            to: 'n6',
-            amount: 8220,
-            count: 5,
-            startDate: '20200101',
-            endDate: '20210207',
-          },
-          {
-            from: 'n2',
-            to: 'n1',
-            amount: 69200,
-            count: 6,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n3',
-            to: 'n7',
-            amount: 15400,
-            count: 42,
-            startDate: '20200101',
-            endDate: '20210207',
-          },
-          {
-            from: 'n3',
-            to: 'n1',
-            amount: 3095.18,
-            count: 87,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n7',
-            to: 'n1',
-            amount: 150,
-            count: 3,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n7',
-            to: 'n3',
-            amount: 2771.5,
-            count: 35,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n8',
-            to: 'n0',
-            amount: 984,
-            count: 62,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n9',
-            to: 'n7',
-            amount: 7980.02,
-            count: 3,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n9',
-            to: 'n6',
-            amount: 11800,
-            count: 4,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n9',
-            to: 'n3',
-            amount: 99900,
-            count: 40,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-          {
-            from: 'n9',
-            to: 'n2',
-            amount: 20300,
-            count: 18,
-            startDate: '20110701',
-            endDate: '20230405',
-          },
-        ],
-        phone: [],
-      },
-    };
+    originData.value = readData();
 
     renderGraph();
     if (graph && graph.value) {

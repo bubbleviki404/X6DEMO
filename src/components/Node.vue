@@ -65,9 +65,12 @@ onMounted(() => {
 .node_menu {
   width: 80px;
   height: 100px;
-  border: solid 1px rgb(143, 143, 143);
-  background: white;
+  border: solid 1px rgb(51, 102, 153);
+  background: rgb(46, 132, 193);
   border-radius: 8px;
+}
+.node_menu_title {
+  color: white;
 }
 
 .node_menu_context {
