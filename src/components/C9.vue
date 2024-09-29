@@ -36,6 +36,7 @@ import { register, getTeleport } from "@antv/x6-vue-shape";
 import NodeComponent from "./Node.vue";
 import { DagreLayout } from "@antv/layout";
 import axios from "axios";
+import { getAngle, getTransactionLevel } from "../utils/graphUtils";
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
@@ -55,85 +56,59 @@ const nodesPorts = {};
 // 交易金额记录
 const maxAmount = ref(0); // 最高金额
 const minAmount = ref(0); // 最低金额
-const sortedTransactions = [];
-// 获取交易级别 => 线宽度
-const getTransactionLevel = (amount) => {
-  const range = (maxAmount.value - minAmount.value) / 5;
 
-  if (amount >= minAmount.value && amount < minAmount.value + range) {
-    return 1;
-  } else if (
-    amount >= minAmount.value + range &&
-    amount < minAmount.value + 2 * range
-  ) {
-    return 1.5;
-  } else if (
-    amount >= minAmount.value + 2 * range &&
-    amount < minAmount.value + 3 * range
-  ) {
-    return 2;
-  } else if (
-    amount >= minAmount.value + 3 * range &&
-    amount < minAmount.value + 4 * range
-  ) {
-    return 2.5;
-  } else if (
-    amount >= minAmount.value + 4 * range &&
-    amount <= maxAmount.value
-  ) {
-    return 3;
-  } else {
-    return null;
-  }
-};
-
-// 计算两点之间角度
-const getAngle = (x1, y1, x2, y2) => {
-  var x = x2 - x1;
-  var y = y2 - y1;
-  var atan = Math.atan2(y, x); // 使用 atan2 方法来获取角度
-  var angle = Math.round((atan * 180) / Math.PI); // 将弧度转换为角度
-  if (angle < 0) {
-    angle = angle + 360;
-  }
-  return angle > 0 ? 360 - angle : 360 + angle;
-};
-
-// 节点布局间隔
-const ranksep = 150;
-const nodesep = 40;
-
-// 画布颜色配置
-const graphColor = {
-  graph: "#F2F7FA",
-  filter: {
-    cell: "rgba(0,0,0,0)",
-    stroke: "rgba(0,0,0,.1)",
+// 画布样式配置
+const graphConfig = {
+  size: {
+    width: 960,
+    height: 1028,
   },
-  edge: {
-    label: {
-      text: {
+  // 布局间隔
+  sep: {
+    rank: 150,
+    node: 40,
+  },
+  // 颜色
+  color: {
+    graph: "#F2F7FA",
+    filter: {
+      cell: "rgba(0,0,0,0)",
+      stroke: "rgba(0,0,0,.1)",
+    },
+    edge: {
+      label: {
+        text: {
+          money: "#36121e",
+          phone: "purple",
+        },
+
+        bg: {
+          // money: "yellow",
+          // phone: "pink",
+        },
+      },
+      line: {
         money: "#36121e",
+        phone: "grey",
+      },
+      port: {
+        moneyIn: "blue",
+        moneyOut: "green",
         phone: "purple",
+        stroke: "black",
       },
-
-      bg: {
-        // money: "yellow",
-        // phone: "pink",
-      },
-    },
-    line: {
-      money: "#36121e",
-      phone: "grey",
-    },
-    port: {
-      moneyIn: "blue",
-      moneyOut: "green",
-      phone: "purple",
-      stroke: "black",
     },
   },
 };
+
+// 布局
+const dagreLayout = new DagreLayout({
+  type: "dagre",
+  rankdir: "LR",
+  align: "UR",
+  ranksep: graphConfig.rank,
+  nodesep: graphConfig.sep.node,
+});
 
 // 构建标签
 const buildLabel = (edge: any) => {
@@ -142,12 +117,12 @@ const buildLabel = (edge: any) => {
   let labelBg;
   if (edge.type === "money") {
     labelText = "转账 " + edge.count + "笔 共" + edge.amount + "元";
-    labelColor = graphColor.edge.label.text.money;
-    labelBg = graphColor.edge.label.bg.money;
+    labelColor = graphConfig.color.edge.label.text.money;
+    labelBg = graphConfig.color.edge.label.bg.money;
   } else {
     labelText = "通话" + edge.count + "次";
-    labelColor = graphColor.edge.label.text.phone;
-    labelBg = graphColor.edge.label.bg.phone;
+    labelColor = graphConfig.color.edge.label.text.phone;
+    labelBg = graphConfig.color.edge.label.bg.phone;
   }
   return {
     attrs: {
@@ -156,6 +131,7 @@ const buildLabel = (edge: any) => {
         text: labelText,
         fill: labelColor,
         stroke: labelColor,
+        // TODO:标签位置
       },
       rect: {
         ref: "label",
@@ -177,7 +153,7 @@ const buildEdge = (edge: any) => {
   let paddingBottom = 30;
 
   if (edge.type != "phone") {
-    lineColor = graphColor.edge.line.money;
+    lineColor = graphConfig.color.edge.line.money;
 
     fromPortType = "moneyOut" + "_" + nextNode;
     toPortType = "moneyIn" + "_" + currentNode;
@@ -208,7 +184,7 @@ const buildEdge = (edge: any) => {
 
     paddingBottom = (toArray.length + fromArray.length) * paddingBottom;
   } else {
-    lineColor = graphColor.edge.line.phone;
+    lineColor = graphConfig.color.edge.line.phone;
     fromPortType = "phone";
     toPortType = "phone";
   }
@@ -225,7 +201,6 @@ const buildEdge = (edge: any) => {
     if (edge.amount < minAmount.value) {
       minAmount.value = edge.amount;
     }
-    sortedTransactions.push(edge.amount);
   }
 
   return {
@@ -272,10 +247,6 @@ const nodePorts = (currenNode: String) => {
   const items = [{ group: "phone", id: "phone" }];
   const ports = nodesPorts[currenNode];
   if (ports) {
-    if (currenNode == "6231139901000023075") {
-      console.log("from >>>", ports["from"]);
-      console.log("to >>>", ports["to"]);
-    }
     ports["from"].forEach((n) => {
       let portId = "moneyIn" + "_" + n;
       items.push({
@@ -302,8 +273,8 @@ const nodePorts = (currenNode: String) => {
         attrs: {
           circle: {
             magnet: false,
-            stroke: graphColor.edge.port.stroke,
-            fill: graphColor.edge.port.moneyIn,
+            stroke: graphConfig.color.edge.port.stroke,
+            fill: graphConfig.color.edge.port.moneyIn,
             r: 2,
           },
         },
@@ -314,8 +285,8 @@ const nodePorts = (currenNode: String) => {
         attrs: {
           circle: {
             magnet: false,
-            stroke: graphColor.edge.port.stroke,
-            fill: graphColor.edge.port.moneyOut,
+            stroke: graphConfig.color.edge.port.stroke,
+            fill: graphConfig.color.edge.port.moneyOut,
             r: 2,
           },
         },
@@ -326,8 +297,8 @@ const nodePorts = (currenNode: String) => {
         attrs: {
           circle: {
             magnet: false,
-            stroke: graphColor.edge.port.stroke,
-            fill: graphColor.edge.port.phone,
+            stroke: graphConfig.color.edge.port.stroke,
+            fill: graphConfig.color.edge.port.phone,
             r: 2,
           },
         },
@@ -368,7 +339,7 @@ const renderGraph = () => {
       minScale: 0.5,
     },
     background: {
-      color: graphColor.graph,
+      color: graphConfig.color.graph,
     },
   });
 
@@ -376,8 +347,8 @@ const renderGraph = () => {
   graph.value.use(
     new Scroller({
       enabled: true,
-      height: 640,
-      width: 1024,
+      height: graphConfig.size.height,
+      width: graphConfig.size.width,
       autoResize: true,
     })
   );
@@ -410,15 +381,6 @@ const renderGraph = () => {
     })
   );
 };
-
-// 布局
-const dagreLayout = new DagreLayout({
-  type: "dagre",
-  rankdir: "LR",
-  align: "UR",
-  ranksep: ranksep,
-  nodesep: nodesep,
-});
 
 const nodeMoving = (e) => {
   // 同X轴：5的偏差
@@ -633,7 +595,7 @@ const renderNodes = () => {
         e.getSourceNode().id !== selectedNodeId &&
         e.getTargetNode().id !== selectedNodeId
       ) {
-        e.attr("line/stroke", graphColor.filter.stroke);
+        e.attr("line/stroke", graphConfig.color.filter.stroke);
         e.setAttrByPath("data/data/isFilter", true);
 
         const size = e.labels.length;
@@ -644,9 +606,9 @@ const renderNodes = () => {
         }
 
         originLabel.forEach((label, index) => {
-          label.attrs.label.stroke = graphColor.filter.cell;
-          label.attrs.label.fill = graphColor.filter.cell;
-          label.attrs.rect.fill = graphColor.filter.cell;
+          label.attrs.label.stroke = graphConfig.color.filter.cell;
+          label.attrs.label.fill = graphConfig.color.filter.cell;
+          label.attrs.rect.fill = graphConfig.color.filter.cell;
           e.appendLabel(label);
         });
       }
@@ -677,15 +639,15 @@ const renderNodes = () => {
         originLabel.forEach((label, index) => {
           let labelType = label.attrs.label.type;
           if (labelType === "money") {
-            e.attr("line/stroke", graphColor.edge.line.money); // 恢复边原始颜色
-            label.attrs.label.stroke = graphColor.edge.label.text.money;
-            label.attrs.label.fill = graphColor.edge.label.text.money;
-            label.attrs.rect.fill = graphColor.edge.label.bg.money;
+            e.attr("line/stroke", graphConfig.color.edge.line.money); // 恢复边原始颜色
+            label.attrs.label.stroke = graphConfig.color.edge.label.text.money;
+            label.attrs.label.fill = graphConfig.color.edge.label.text.money;
+            label.attrs.rect.fill = graphConfig.color.edge.label.bg.money;
           } else {
-            e.attr("line/stroke", graphColor.edge.line.phone);
-            label.attrs.label.stroke = graphColor.edge.label.text.phone;
-            label.attrs.label.fill = graphColor.edge.label.text.phone;
-            label.attrs.rect.fill = graphColor.edge.label.bg.phone;
+            e.attr("line/stroke", graphConfig.color.edge.line.phone);
+            label.attrs.label.stroke = graphConfig.color.edge.label.text.phone;
+            label.attrs.label.fill = graphConfig.color.edge.label.text.phone;
+            label.attrs.rect.fill = graphConfig.color.edge.label.bg.phone;
           }
 
           e.appendLabel(label);
@@ -811,6 +773,7 @@ const customSort = (arr) => {
     return toCountDiff;
   });
 };
+
 const readData = () => {
   const money = [
     {
