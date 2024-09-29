@@ -37,7 +37,6 @@ import NodeComponent from './Node.vue';
 import { DagreLayout } from '@antv/layout';
 import axios from 'axios';
 import { getAngle, getTransactionLevel } from '../utils/graphUtils';
-import { he } from 'element-plus/es/locale/index.mjs';
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
@@ -60,10 +59,6 @@ const minAmount = ref(0); // 最低金额
 
 // 画布样式配置
 const graphConfig = {
-  node: {
-    width: 80,
-    height: 100,
-  },
   size: {
     width: 960,
     height: 1028,
@@ -387,10 +382,128 @@ const renderGraph = () => {
   );
 };
 
+const nodeMoving = (e) => {
+  // 同X轴：5的偏差
+  // if (!axisMap.x[e.x]) {
+  //   axisMap.x[e.x] = [];
+  // }
+  // axisMap.x[e.x].push(e);
+  // if (axisMap.x[e.x].length > 1) {
+  //   e.x += axisMap.x[e.x].length * 40;
+  // }
+  // 同y轴：20的偏差（2个节点以上）
+  // if (!axisMap.y[e.y]) {
+  //   axisMap.y[e.y] = [];
+  // }
+  // axisMap.y[e.y].push(e);
+  // if (axisMap.y[e.y].length > 2 && axisMap.y[e.y].length < 5) {
+  //   e.y += axisMap.y[e.y].length * 20;
+  // }
+  // if (axisMap.y[e.y].length > 5) {
+  //   e.y += axisMap.y[e.y].length * 35;
+  // }
+  // if (axisMap.y[e.y].length > 2) {
+  //   let portSize = 1;
+  //   if (e.ports && e.ports.items && e.ports.items.length) {
+  //     portSize += e.ports.items.length;
+  //   }
+  //   e.y += portSize * 20;
+  // }
+};
+const lineMoving = (e) => {
+  // 调整线位置
+  let source = nodePositionMap[e.source.cell];
+  console.log('source >>>>', source.id);
+  let target = nodePositionMap[e.target.cell];
+  console.log('target >>>>', target.id);
+
+  let sourcePorts = nodesPorts[source.id].to;
+  let targetPorts = nodesPorts[target.id].from;
+
+  let sourceIndex = sourcePorts.indexOf(target.id) + 1;
+  let targetIndex = targetPorts.indexOf(source.id) + 1;
+
+  const angle = getAngle(source.x, target.x, target.y, target.y);
+
+  // console.log("angle >>>>", angle);
+
+  // if (angle > 135 && angle < 151) {
+  //   e["vertices"] = [
+  //     {
+  //       x: source.x + sourceIndex * 15,
+  //       y: target.y + sourceIndex * 10,
+  //     },
+  //     {
+  //       x: source.x - 10 - targetIndex * 10,
+  //       y: target.y + 50 + targetIndex * 10,
+  //     },
+  //   ];
+  // }
+  // if (angle > 150 && angle < 181) {
+  //   e["vertices"] = [
+  //     {
+  //       x: source.x + sourceIndex * 15,
+  //       y: target.y + sourceIndex * 10,
+  //     },
+  //     {
+  //       x: source.x - 10 - targetIndex * 10,
+  //       y: target.y + 50 + targetIndex * 10,
+  //     },
+  //   ];
+  // }
+
+  // if (angle > 180 && angle < 201) {
+  //   e["vertices"] = [
+  //     {
+  //       x: source.x + 10 + sourceIndex * 15,
+  //       y: target.y + 100 + sourceIndex * 10,
+  //     },
+  //     {
+  //       x: source.x - 10 - targetIndex * 10,
+  //       y: target.y + 100 + targetIndex * 10,
+  //     },
+  //   ];
+  // }
+  // if (angle > 200 && angle < 225) {
+  //   e["vertices"] = [
+  //     {
+  //       x: source.x + 10 + sourceIndex * 15,
+  //       y: target.y + sourceIndex * 10,
+  //     },
+  //     {
+  //       x: source.x - 10 - targetIndex * 10,
+  //       y: target.y + 100 + targetIndex * 10,
+  //     },
+  //   ];
+  // }
+  // if (angle > 340 && angle < 360) {
+  //   e["vertices"] = [
+  //     {
+  //       x: source.x + 80 + sourceIndex * 15,
+  //       y: target.y + 30 +  sourceIndex * 10,
+  //     },
+  //     {
+  //       // x: source.x - 10 - targetIndex * 10,
+  //       // y: target.y  + targetIndex * 10,
+  //     },
+  //   ];
+  // }
+};
+
 // 渲染数据
 const renderData = () => {
-  // 获取布局数据
   const model = dagreLayout.layout(data);
+  const nodePositionMap = {};
+  const axisMap = {
+    x: {},
+    y: {},
+  };
+
+  model.nodes.forEach((e) => {
+    nodePositionMap[e.id] = e;
+    // nodeMoving(e);
+  });
+
   model.edges.forEach((e) => {
     // 调整线宽度
     let width = getTransactionLevel(e.data.amount);
@@ -398,10 +511,10 @@ const renderData = () => {
       e.attrs.line.strokeWidth = width;
       console.log('e.attrs.line.strokeWidth >>> ', e.attrs.line.strokeWidth);
     }
+    // lineMoving(e);
   });
-  // 渲染数据
+
   graph.value.fromJSON(model);
-  onCenterContent();
 };
 
 // 节点渲染
@@ -410,8 +523,8 @@ const renderNodes = () => {
   register({
     shape: 'custom-vue-node',
     inherit: 'vue-shape',
-    width: graphConfig.node.width,
-    height: graphConfig.node.height,
+    width: 80,
+    height: 100,
     component: NodeComponent,
   });
 
@@ -630,6 +743,234 @@ const exportToPng = () => {
     link.click();
   });
 };
+
+const customSort = (arr) => {
+  // 统计每个 from 和 to 的出现次数
+  const fromCountMap = new Map();
+  const toCountMap = new Map();
+  arr.forEach((item) => {
+    if (!fromCountMap.has(item.from)) {
+      fromCountMap.set(item.from, 0);
+    }
+    fromCountMap.set(item.from, fromCountMap.get(item.from) + 1);
+
+    if (!toCountMap.has(item.to)) {
+      toCountMap.set(item.to, 0);
+    }
+    toCountMap.set(item.to, toCountMap.get(item.to) + 1);
+  });
+
+  return arr.sort((a, b) => {
+    const fromCountDiff = fromCountMap.get(b.from) - fromCountMap.get(a.from);
+    console.log(
+      `Comparing ${a.from} and ${b.from}, fromCountDiff: ${fromCountDiff}`
+    );
+    if (fromCountDiff !== 0) {
+      return fromCountDiff;
+    }
+    const toCountDiff = toCountMap.get(b.to) - toCountMap.get(a.to);
+    console.log(`Comparing ${a.to} and ${b.to}, toCountDiff: ${toCountDiff}`);
+    return toCountDiff;
+  });
+};
+
+const readData = () => {
+  const money = [
+    {
+      from: 'n0',
+      to: 'n8',
+      amount: 906000,
+      count: 5,
+      startDate: '2015-08-17',
+      endDate: '2016-10-02',
+    },
+    {
+      from: 'n1',
+      to: 'n2',
+      amount: 21500,
+      count: 3,
+      startDate: '2023-10-21',
+      endDate: '2024-01-06',
+    },
+    {
+      from: 'n1',
+      to: 'n7',
+      amount: 21300,
+      count: 86,
+      startDate: '20200101',
+      endDate: '20210207',
+    },
+    {
+      from: 'n1',
+      to: 'n3',
+      amount: 150000,
+      count: 141,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n2',
+      to: 'n9',
+      amount: 5,
+      count: 3235,
+      startDate: '20200101',
+      endDate: '20210207',
+    },
+    {
+      from: 'n2',
+      to: 'n3',
+      amount: 1030,
+      count: 1,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n2',
+      to: 'n6',
+      amount: 8220,
+      count: 5,
+      startDate: '20200101',
+      endDate: '20210207',
+    },
+    {
+      from: 'n2',
+      to: 'n1',
+      amount: 69200,
+      count: 6,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n3',
+      to: 'n7',
+      amount: 15400,
+      count: 42,
+      startDate: '20200101',
+      endDate: '20210207',
+    },
+    {
+      from: 'n3',
+      to: 'n1',
+      amount: 3095.18,
+      count: 87,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n7',
+      to: 'n1',
+      amount: 150,
+      count: 3,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n7',
+      to: 'n3',
+      amount: 2771.5,
+      count: 35,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n8',
+      to: 'n0',
+      amount: 984,
+      count: 62,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n9',
+      to: 'n7',
+      amount: 7980.02,
+      count: 3,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n9',
+      to: 'n6',
+      amount: 11800,
+      count: 4,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n9',
+      to: 'n3',
+      amount: 99900,
+      count: 40,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+    {
+      from: 'n9',
+      to: 'n2',
+      amount: 20300,
+      count: 18,
+      startDate: '20110701',
+      endDate: '20230405',
+    },
+  ];
+  console.log(money);
+
+  const nodes = [
+    {
+      id: 'n0',
+      label: '陈凤姣',
+    },
+    {
+      id: 'n1',
+      label: '程以生（个人）',
+    },
+    {
+      id: 'n2',
+      label: '丁勇',
+    },
+    {
+      id: 'n3',
+      label: '丁勇（个人）',
+    },
+    {
+      id: 'n4',
+      label: '高博',
+    },
+    {
+      id: 'n5',
+      label: '林裕荣（个人）',
+    },
+    {
+      id: 'n6',
+      label: '徐鹏',
+    },
+    {
+      id: 'n7',
+      label: '徐鹏（个人）',
+    },
+    {
+      id: 'n8',
+      label: '张文红',
+    },
+    {
+      id: 'n9',
+      label: '其他',
+    },
+  ];
+  const phone = [];
+  const sortedData = customSort(money);
+
+  console.log(sortedData);
+
+  return {
+    nodes: nodes,
+    edges: {
+      money: sortedData,
+      phone: phone,
+    },
+  };
+};
+
 const dataToSend = {
   caseId: 1,
   queryList: [
@@ -693,27 +1034,41 @@ const sendRequest = async () => {
     return null;
   }
 };
+
 onMounted(async () => {
   nextTick(() => {
-    async function process() {
-      const responseData = await sendRequest();
-      if (responseData) {
-        originData.value = {
-          nodes: responseData.nodes,
-          edges: {
-            money: responseData.money,
-            phone: [],
-          },
-        };
-        renderGraph();
-        if (graph && graph.value) {
-          renderNodes();
-        }
-      }
+    originData.value = readData();
+
+    renderGraph();
+    if (graph && graph.value) {
+      renderNodes();
     }
-    process();
   });
 });
+
+// onMounted(async () => {
+//   nextTick(() => {
+//     async function process() {
+//       debugger
+//       const responseData = await sendRequest();
+//       if (responseData) {
+//         debugger
+//         originData.value = {
+//           nodes: responseData.nodes,
+//           edges: {
+//             money: responseData.money,
+//             phone: [],
+//           },
+//         };
+//         renderGraph();
+//         if (graph && graph.value) {
+//           renderNodes();
+//         }
+//       }
+//     }
+//     process();
+//   });
+// });
 
 onUnmounted(() => {});
 </script>
