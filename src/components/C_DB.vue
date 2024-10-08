@@ -26,7 +26,7 @@
 <script lang="ts" setup>
 import * as htmlToImage from 'html-to-image';
 import { Back, Right, Search } from '@element-plus/icons-vue';
-import { nextTick, onMounted, ref, onUnmounted, defineProps } from 'vue';
+import { h, nextTick, onMounted, ref, onUnmounted, defineProps } from 'vue';
 import { Graph } from '@antv/x6';
 import { Scroller } from '@antv/x6-plugin-scroller';
 import { Selection } from '@antv/x6-plugin-selection';
@@ -451,7 +451,18 @@ const renderNodes = () => {
     inherit: 'vue-shape',
     width: graphConfig.node.width,
     height: graphConfig.node.height,
-    component: NodeComponent,
+    // component: NodeComponent,
+    component: {
+      // 使用vue3的render渲染组件，并添加自定义事件
+      render() {
+        return h(NodeComponent, {
+          // 事件名称前面必须添加 `on`
+          onPin: (val: string) => {
+            onCenrerNode(val);
+          },
+        });
+      },
+    },
   });
 
   originData.value?.edges.phone.forEach((edge) => {

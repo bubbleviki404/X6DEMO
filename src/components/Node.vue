@@ -8,11 +8,12 @@
       <div class="node_menu_title">{{ nodeName }}</div>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item>定位到此处</el-dropdown-item>
+          <el-dropdown-item @click="pin">定位到此处</el-dropdown-item>
           <el-dropdown-item divided>上钻</el-dropdown-item>
           <el-dropdown-item divided disabled>下钻</el-dropdown-item>
-          <el-dropdown-item divided>去向</el-dropdown-item>
-          <el-dropdown-item divided>来源</el-dropdown-item>
+          <el-dropdown-item divided command="congig"
+            >上下钻设置</el-dropdown-item
+          >
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -20,19 +21,25 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, inject } from "vue";
-import { Node } from "@antv/x6";
+import { onMounted, ref, inject, defineEmits } from 'vue';
+import { Node } from '@antv/x6';
 
 // 组件名称定义
 defineOptions({
-  name: "NodeComponent",
+  name: 'NodeComponent',
 });
 
 // 注入X6节点
-const getNode = inject("getNode") as () => Node;
-const nodeName = ref("");
-const nodeId = ref("");
+const getNode = inject('getNode') as () => Node;
+const nodeName = ref('');
+const nodeId = ref('');
 const blur = ref(false);
+
+// 菜单方法
+const emit = defineEmits(['pin']);
+const pin = () => {
+  emit('pin', nodeId.value);
+};
 
 onMounted(() => {
   // 获取节点
@@ -44,7 +51,7 @@ onMounted(() => {
   blur.value = node.data.blur;
 
   // 监听节点变化
-  node.on("change:data", ({ current }) => {
+  node.on('change:data', ({ current }) => {
     if (current && current.nodeName) {
       const {
         nodeName: newNodeName,
@@ -53,9 +60,9 @@ onMounted(() => {
       } = current;
 
       // 更新当前属性
-      nodeName.value = newNodeName || ""; 
-      nodeId.value = newNodeId || ""; 
-      blur.value = newBlur !== undefined ? newBlur : false; 
+      nodeName.value = newNodeName || '';
+      nodeId.value = newNodeId || '';
+      blur.value = newBlur !== undefined ? newBlur : false;
     }
   });
 });
