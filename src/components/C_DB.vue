@@ -26,7 +26,7 @@
 <script lang="ts" setup>
 import * as htmlToImage from 'html-to-image';
 import { Back, Right, Search } from '@element-plus/icons-vue';
-import { nextTick, onMounted, ref, onUnmounted } from 'vue';
+import { nextTick, onMounted, ref, onUnmounted, defineProps } from 'vue';
 import { Graph } from '@antv/x6';
 import { Scroller } from '@antv/x6-plugin-scroller';
 import { Selection } from '@antv/x6-plugin-selection';
@@ -35,24 +35,64 @@ import { History } from '@antv/x6-plugin-history';
 import { register, getTeleport } from '@antv/x6-vue-shape';
 import NodeComponent from './Node.vue';
 import { DagreLayout } from '@antv/layout';
-import axios from 'axios';
-import { getAngle, getTransactionLevel } from '../utils/graphUtils';
-import { he } from 'element-plus/es/locale/index.mjs';
+import { getTransactionLevel } from '../utils/graphUtils';
+
+interface ResponseData {
+  nodes: [];
+  edges: {
+    money: [];
+    phone: [];
+  };
+}
+const props = defineProps<{
+  graphData: ResponseData; // 根据需要定义类型
+}>();
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
 const TeleportContainer = getTeleport();
-const graph = ref<Graph>();
+const graph = ref<Graph | null>(null);
+
+interface Edge {
+  money: {
+    from: string;
+    to: string;
+    amount: number;
+    count: number;
+    startDate: string;
+    endDate: string;
+  };
+  phone: {
+    from: string;
+    to: string;
+    count: number;
+    startDate: string;
+    endDate: string;
+  };
+}
 
 // 原始数据
-const originData = ref(null);
+const originData = ref<{
+  nodes: Array<{ id: string; label: string }>;
+  edges: {
+    money: Array<Edge['money']>; // 使用 Edge 接口
+    phone: Array<Edge['phone']>;
+  };
+} | null>(null);
 
 // 节点数据
 const data = {
-  nodes: [],
-  edges: [],
+  nodes: [] as Array<{
+    id: string;
+    shape: string;
+    x: number;
+    y: number;
+    zIndex: number;
+    label: string;
+    data: any;
+    ports: any;
+  }>,
+  edges: [] as Array<any>,
 };
-// 节点端口数据
-const nodesPorts = {};
 
 // 交易金额记录
 const maxAmount = ref(0); // 最高金额
@@ -65,8 +105,8 @@ const graphConfig = {
     height: 100,
   },
   size: {
-    width: 960,
-    height: 1028,
+    width: 1028,
+    height: 640,
   },
   // 布局间隔
   sep: {
@@ -85,11 +125,6 @@ const graphConfig = {
         text: {
           money: '#36121e',
           phone: 'purple',
-        },
-
-        bg: {
-          // money: "yellow",
-          // phone: "pink",
         },
       },
       line: {
@@ -119,15 +154,16 @@ const dagreLayout = new DagreLayout({
 const buildLabel = (edge: any) => {
   let labelText;
   let labelColor;
-  let labelBg;
+  if (edge.amount) {
+    edge.type = 'money';
+  }
   if (edge.type === 'money') {
     labelText = '转账 ' + edge.count + '笔 共' + edge.amount + '元';
     labelColor = graphConfig.color.edge.label.text.money;
-    labelBg = graphConfig.color.edge.label.bg.money;
   } else {
     labelText = '通话' + edge.count + '次';
     labelColor = graphConfig.color.edge.label.text.phone;
-    labelBg = graphConfig.color.edge.label.bg.phone;
+    // labelBg = graphConfig.color.edge.label.bg.phone;
   }
   return {
     attrs: {
@@ -138,13 +174,16 @@ const buildLabel = (edge: any) => {
         stroke: labelColor,
         // TODO:标签位置
       },
-      rect: {
-        ref: 'label',
-        fill: labelBg,
-      },
+      // rect: {
+      //   ref: 'label',
+      //   fill: labelBg,
+      // },
     },
   };
 };
+
+// 节点端口数据
+const nodesPorts: Record<string, { from: string[]; to: string[] }> = {};
 
 // 构建边
 const buildEdge = (edge: any) => {
@@ -163,31 +202,18 @@ const buildEdge = (edge: any) => {
     fromPortType = 'moneyOut' + '_' + nextNode;
     toPortType = 'moneyIn' + '_' + currentNode;
 
-    let fromArray = [];
-    let toArray = [];
-
-    if (nodesPorts[currentNode]) {
-      toArray = nodesPorts[currentNode]['to'];
-    } else {
-      nodesPorts[currentNode] = {};
-      nodesPorts[currentNode]['from'] = [];
-      nodesPorts[currentNode]['to'] = [];
+    if (!nodesPorts[currentNode]) {
+      nodesPorts[currentNode] = { from: [], to: [] };
     }
-    toArray.push(nextNode);
-
-    nodesPorts[currentNode]['to'] = toArray;
-
-    if (nodesPorts[nextNode]) {
-      fromArray = nodesPorts[nextNode]['from'];
-    } else {
-      nodesPorts[nextNode] = {};
-      nodesPorts[nextNode]['from'] = [];
-      nodesPorts[nextNode]['to'] = [];
+    if (!nodesPorts[nextNode]) {
+      nodesPorts[nextNode] = { from: [], to: [] };
     }
-    fromArray.push(currentNode);
-    nodesPorts[nextNode]['from'] = fromArray;
+    nodesPorts[nextNode]['from'].push(currentNode);
+    nodesPorts[currentNode]['to'].push(nextNode);
 
-    paddingBottom = (toArray.length + fromArray.length) * paddingBottom;
+    let fromArraySize = nodesPorts[currentNode]['from'].length;
+    let toArraySize = nodesPorts[currentNode]['to'].length;
+    paddingBottom = (fromArraySize + toArraySize) * paddingBottom;
   } else {
     lineColor = graphConfig.color.edge.line.phone;
     fromPortType = 'phone';
@@ -248,11 +274,11 @@ const buildEdge = (edge: any) => {
 };
 
 // 构建节点端口
-const nodePorts = (currenNode: String) => {
+const nodePorts = (currenNode: string) => {
   const items = [{ group: 'phone', id: 'phone' }];
   const ports = nodesPorts[currenNode];
   if (ports) {
-    ports['from'].forEach((n) => {
+    ports['from'].forEach((n: string) => {
       let portId = 'moneyIn' + '_' + n;
       items.push({
         group: 'moneyIn',
@@ -260,7 +286,7 @@ const nodePorts = (currenNode: String) => {
         // attrs: { text: { text: portId } },
       });
     });
-    ports['to'].forEach((n) => {
+    ports['to'].forEach((n: string) => {
       let portId = 'moneyOut' + '_' + n;
       items.push({
         group: 'moneyOut',
@@ -314,7 +340,7 @@ const nodePorts = (currenNode: String) => {
 };
 
 // 构建节点
-const buildNode = (id: String, label: String) => {
+const buildNode = (id: string, label: string) => {
   return {
     id: id,
     shape: 'custom-vue-node',
@@ -361,8 +387,10 @@ const renderGraph = () => {
   // 历史记录
   graph.value.use(new History({ enabled: true }));
   graph.value.on('history:change', () => {
-    canUndo.value = graph.value.canUndo();
-    canRedo.value = graph.value.canRedo();
+    if (graph && graph.value) {
+      canUndo.value = graph.value.canUndo();
+      canRedo.value = graph.value.canRedo();
+    }
   });
 
   // 导出
@@ -391,17 +419,28 @@ const renderGraph = () => {
 const renderData = () => {
   // 获取布局数据
   const model = dagreLayout.layout(data);
-  model.edges.forEach((e) => {
-    // 调整线宽度
-    let width = getTransactionLevel(e.data.amount);
-    if (width) {
-      e.attrs.line.strokeWidth = width;
-      console.log('e.attrs.line.strokeWidth >>> ', e.attrs.line.strokeWidth);
-    }
-  });
+  if (model.edges) {
+    model.edges.forEach((e: any) => {
+      // 调整线宽度
+      let width = getTransactionLevel(
+        e.data,
+        minAmount.value,
+        maxAmount.value,
+        5
+      );
+      if (width) {
+        e.attrs.line.strokeWidth = width;
+        console.log('e.attrs.line.strokeWidth >>> ', e.attrs.line.strokeWidth);
+      }
+    });
+  }
+
   // 渲染数据
-  graph.value.fromJSON(model);
+  graph.value?.fromJSON(model);
   onCenterContent();
+
+  // 缩放至合适位置
+  graph.value?.zoomToFit();
 };
 
 // 节点渲染
@@ -415,17 +454,17 @@ const renderNodes = () => {
     component: NodeComponent,
   });
 
-  originData.value.edges.phone.forEach((edge) => {
-    edge.type = 'phone';
+  originData.value?.edges.phone.forEach((edge) => {
+    // edge.type = 'phone';
     data.edges.push(buildEdge(edge));
   });
 
-  originData.value.edges.money.forEach((edge) => {
-    edge.type = 'money';
+  originData.value?.edges.money.forEach((edge) => {
+    // edge.type = 'money';
     data.edges.push(buildEdge(edge));
   });
 
-  originData.value.nodes.forEach(({ id, label }) => {
+  originData.value?.nodes.forEach(({ id, label }) => {
     data.nodes.push(buildNode(id, label));
   });
 
@@ -437,50 +476,57 @@ const renderNodes = () => {
   // graph.value.addEdges(data.edges);
 
   // 节点-双击：节点居中
-  graph.value.on('node:dblclick', ({ view }) => {
+  graph.value?.on('node:dblclick', ({ view }) => {
     if (view && view.cell && view.cell.id) {
       onCenrerNode(view.cell.id);
     }
   });
 
   /** 节点选中事件 */
-  graph.value.on('node:selected', ({ node }) => {
+  graph.value?.on('node:selected', ({ node }) => {
     console.log('node:selected:', node);
 
     // 获取当前选中的节点 ID
     const selectedNodeId = node.id;
 
     // 获取所有节点和边
-    const allNodes = graph.value.getNodes();
-    const allEdges = graph.value.getEdges();
+    const allNodes = graph.value?.getNodes();
+    const allEdges = graph.value?.getEdges();
 
     // 寻找与选中节点相连的节点
-    const connectedNodeIds = allEdges
-      .filter(
-        (edge) =>
-          edge.getSourceCellId() === selectedNodeId ||
-          edge.getTargetCellId() === selectedNodeId
-      )
-      .map((edge) => {
-        return edge.getSourceCellId() === selectedNodeId
-          ? edge.getTargetCellId()
-          : edge.getSourceCellId();
-      });
+    if (allEdges) {
+      const connectedNodeIds = allEdges
+        .filter(
+          (edge) =>
+            edge.getSourceCellId() === selectedNodeId ||
+            edge.getTargetCellId() === selectedNodeId
+        )
+        .map((edge) => {
+          return edge.getSourceCellId() === selectedNodeId
+            ? edge.getTargetCellId()
+            : edge.getSourceCellId();
+        });
 
-    allNodes.forEach((n) => {
-      if (n.id !== selectedNodeId && !connectedNodeIds.includes(n.id)) {
-        let data = n.getData();
-        data.blur = true;
-        n.removeData();
-        n.setData(data);
-      }
-    });
+      allNodes?.forEach((n) => {
+        if (n.id !== selectedNodeId && !connectedNodeIds.includes(n.id)) {
+          let data = n.getData();
+          data.blur = true;
+          n.removeData();
+          n.setData(data);
+        }
+      });
+    }
 
     // 边：虚化与当前选中节点不相连的边
-    allEdges.forEach((e) => {
+    allEdges?.forEach((e) => {
+      const sourceNode = e.getSourceNode();
+      const targetNode = e.getTargetNode();
+
       if (
-        e.getSourceNode().id !== selectedNodeId &&
-        e.getTargetNode().id !== selectedNodeId
+        sourceNode &&
+        targetNode &&
+        sourceNode.id !== selectedNodeId &&
+        targetNode.id !== selectedNodeId
       ) {
         e.attr('line/stroke', graphConfig.color.filter.stroke);
         e.setAttrByPath('data/data/isFilter', true);
@@ -492,49 +538,12 @@ const renderNodes = () => {
           e.removeLabelAt(0);
         }
 
-        originLabel.forEach((label, index) => {
-          label.attrs.label.stroke = graphConfig.color.filter.cell;
-          label.attrs.label.fill = graphConfig.color.filter.cell;
-          label.attrs.rect.fill = graphConfig.color.filter.cell;
-          e.appendLabel(label);
-        });
-      }
-    });
-  });
-
-  /** 节点取消选中事件 */
-  graph.value.on('node:unselected', ({ node }) => {
-    const allNodes = graph.value.getNodes();
-    allNodes.forEach((n) => {
-      let data = n.getData();
-      data.blur = false;
-      n.removeData();
-      n.setData(data);
-    });
-
-    const allEdges = graph.value.getEdges();
-    // 恢复所有边的颜色
-    allEdges.forEach((e) => {
-      if (e.getAttrByPath('data/data/isFilter')) {
-        const size = e.labels.length;
-        const originLabel = e.labels;
-
-        for (let i = size - 1; i > -1; i--) {
-          e.removeLabelAt(0);
-        }
-
-        originLabel.forEach((label, index) => {
-          let labelType = label.attrs.label.type;
-          if (labelType === 'money') {
-            e.attr('line/stroke', graphConfig.color.edge.line.money); // 恢复边原始颜色
-            label.attrs.label.stroke = graphConfig.color.edge.label.text.money;
-            label.attrs.label.fill = graphConfig.color.edge.label.text.money;
-            label.attrs.rect.fill = graphConfig.color.edge.label.bg.money;
-          } else {
-            e.attr('line/stroke', graphConfig.color.edge.line.phone);
-            label.attrs.label.stroke = graphConfig.color.edge.label.text.phone;
-            label.attrs.label.fill = graphConfig.color.edge.label.text.phone;
-            label.attrs.rect.fill = graphConfig.color.edge.label.bg.phone;
+        originLabel.forEach((label) => {
+          let attrs = label.attrs;
+          if (attrs) {
+            attrs.label.stroke = graphConfig.color.filter.cell;
+            attrs.label.fill = graphConfig.color.filter.cell;
+            // attrs.rect.fill = graphConfig.color.filter.cell;
           }
 
           e.appendLabel(label);
@@ -543,28 +552,56 @@ const renderNodes = () => {
     });
   });
 
-  /** 渲染勾选节点 */
-  const renderSelectionNodes = (selected) => {
-    const selectedNodes = selected.map((e) => e.id);
-    // 过滤选中节点
-    const nodes = data.nodes.filter((n) => selectedNodes.includes(n.id));
-    console.log('selectedNodes >>>>', nodes);
-    // 过滤选中节点相关边
-    const edges = data.edges.filter(
-      (e) =>
-        selectedNodes.includes(e.source.cell) &&
-        selectedNodes.includes(e.target.cell)
-    );
-    console.log('selectedEdges >>>>', edges);
+  /** 节点取消选中事件 */
+  graph.value?.on('node:unselected', () => {
+    if (graph.value) {
+      const allNodes = graph.value.getNodes();
+      allNodes.forEach((n) => {
+        let data = n.getData();
+        data.blur = false;
+        n.removeData();
+        n.setData(data);
+      });
+    }
 
-    data.nodes = nodes;
-    data.edges = edges;
+    if (graph.value) {
+      const allEdges = graph.value.getEdges();
+      // 恢复所有边的颜色
+      allEdges.forEach((e) => {
+        if (e.getAttrByPath('data/data/isFilter')) {
+          const size = e.labels.length;
+          const originLabel = e.labels;
 
-    renderData();
-  };
+          for (let i = size - 1; i > -1; i--) {
+            e.removeLabelAt(0);
+          }
+
+          originLabel.forEach((label) => {
+            let attrs = label.attrs;
+            if (attrs) {
+              let labelType = attrs.label.type;
+              if (labelType === 'money') {
+                e.attr('line/stroke', graphConfig.color.edge.line.money); // 恢复边原始颜色
+                attrs.label.stroke = graphConfig.color.edge.label.text.money;
+                attrs.label.fill = graphConfig.color.edge.label.text.money;
+                // attrs.rect.fill = graphConfig.color.edge.label.bg.money;
+              } else {
+                e.attr('line/stroke', graphConfig.color.edge.line.phone);
+                attrs.label.stroke = graphConfig.color.edge.label.text.phone;
+                attrs.label.fill = graphConfig.color.edge.label.text.phone;
+                // attrs.rect.fill = graphConfig.color.edge.label.bg.phone;
+              }
+            }
+
+            e.appendLabel(label);
+          });
+        }
+      });
+    }
+  });
 
   /** 框选事件 */
-  graph.value.on('selection:changed', ({ selected }) => {
+  graph.value?.on('selection:changed', ({ selected }) => {
     console.log('seletion >>>>', selected);
 
     // 过滤勾选节点
@@ -574,17 +611,13 @@ const renderNodes = () => {
   });
 };
 
-/** 画布对齐 */
-const onCenter = () => {
-  graph.value.center();
-};
 const onCenterContent = () => {
-  graph.value.centerContent();
+  graph.value?.centerContent();
 };
 const onCenrerNode = (nodeId: string) => {
-  const node = graph.value.getCellById(nodeId);
+  const node = graph.value?.getCellById(nodeId);
   if (node) {
-    graph.value.centerCell(node);
+    graph.value?.centerCell(node);
   }
 };
 
@@ -595,8 +628,9 @@ const searchForNode = (nodeName: string) => {
   onCenrerNode(nodeId);
 };
 const searchNodeByName = () => {
-  const allNodes = graph.value.getNodes();
-  allNodes.forEach((n) => {
+  const allNodes = graph.value?.getNodes();
+
+  allNodes?.forEach((n) => {
     if (n && n.getData() && n.getData().nodeName == nodeNameSearch.value) {
       searchForNode(n.id);
     }
@@ -607,12 +641,12 @@ const searchNodeByName = () => {
 const canUndo = ref(false);
 const canRedo = ref(false);
 const onUndo = () => {
-  if (graph && graph.value.canUndo()) {
+  if (graph.value && graph.value.canUndo()) {
     graph.value.undo();
   }
 };
 const onRedo = () => {
-  if (graph && graph.value.canRedo()) {
+  if (graph.value && graph.value.canRedo()) {
     graph.value.redo();
   }
 };
@@ -630,88 +664,13 @@ const exportToPng = () => {
     link.click();
   });
 };
-const dataToSend = {
-  caseId: 1,
-  queryList: [
-    {
-      cardNo: '511025198802091421',
-      tradeCard: ['6231139901000023075'],
-    },
-    {
-      cardNo: '511025198802092843',
-      tradeCard: ['18272179'],
-    },
-    {
-      cardNo: '511025198802092844',
-      tradeCard: ['2088002822573801'],
-    },
-    {
-      cardNo: '511025198802092845',
-      tradeCard: ['6228480086109452374'],
-    },
-    {
-      cardNo: '511025198802092846',
-      tradeCard: ['6222021001037345441'],
-    },
-    {
-      cardNo: '511025198802092847',
-      tradeCard: ['6228480088424598873'],
-    },
-    {
-      cardNo: '511025198802092848',
-      tradeCard: ['622908398178980019'],
-    },
-    {
-      cardNo: '511025198802092849',
-      tradeCard: ['6230580000058864633'],
-    },
-    {
-      cardNo: '511025198802092840',
-      tradeCard: ['6228480086300701975'],
-    },
-    {
-      cardNo: '511025198802092842',
-      tradeCard: ['62262289035973856226'],
-    },
-  ],
-};
-const customAxios = axios.create({
-  baseURL: import.meta.env.VITE_API_URL as any,
-  timeout: 50000,
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization:
-      'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzI3MzQ1Mjk2LCJleHAiOjE3Mjc5NTAwOTZ9.sTP6Wmd8WxAcQ-7jaHvsCoEooTVnRmQQ6uuzYAwKKrUDjQRzY3dua6F0b5BUs9Owaof4KPFUNiDAP6NuMPAxAQ',
-  },
-});
-const sendRequest = async () => {
-  try {
-    const response = await customAxios.post('/data/trade/query', dataToSend);
-    return response.data.result;
-  } catch (error) {
-    console.log(error);
-    return null;
-  }
-};
 onMounted(async () => {
   nextTick(() => {
-    async function process() {
-      const responseData = await sendRequest();
-      if (responseData) {
-        originData.value = {
-          nodes: responseData.nodes,
-          edges: {
-            money: responseData.money,
-            phone: [],
-          },
-        };
-        renderGraph();
-        if (graph && graph.value) {
-          renderNodes();
-        }
-      }
+    originData.value = props.graphData;
+    renderGraph();
+    if (graph && graph.value) {
+      renderNodes();
     }
-    process();
   });
 });
 
