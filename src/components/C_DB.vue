@@ -341,6 +341,17 @@ const nodePorts = (currenNode: string) => {
 
 // 构建节点
 const buildNode = (id: string, label: string) => {
+  let drillUpDisabled = true;
+  let drillDownDisabled = true;
+  if (nodesPorts && nodesPorts[id]) {
+    if (nodesPorts[id].from && nodesPorts[id].from.length > 0) {
+      drillUpDisabled = false;
+    }
+    if (nodesPorts[id].to && nodesPorts[id].to.length > 0) {
+      drillDownDisabled = false;
+    }
+  }
+
   return {
     id: id,
     shape: 'custom-vue-node',
@@ -352,6 +363,8 @@ const buildNode = (id: string, label: string) => {
       nodeId: id,
       nodeName: label + '_' + id,
       blur: false,
+      drillUpDisabled: drillUpDisabled,
+      drillDownDisabled: drillDownDisabled,
     },
     ports: nodePorts(id),
   };
@@ -459,6 +472,15 @@ const renderNodes = () => {
           // 事件名称前面必须添加 `on`
           onPin: (val: string) => {
             onCenrerNode(val);
+          },
+          onDrillUp: (val: string) => {
+            console.log('onDrillUp');
+          },
+          onDrillDown: (val: string) => {
+            console.log('onDrillDown');
+          },
+          onDrillConfig: (val: string) => {
+            console.log('onDrillConfig');
           },
         });
       },

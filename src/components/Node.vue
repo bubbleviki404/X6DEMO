@@ -9,9 +9,16 @@
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item @click="pin">定位到此处</el-dropdown-item>
-          <el-dropdown-item divided>上钻</el-dropdown-item>
-          <el-dropdown-item divided disabled>下钻</el-dropdown-item>
-          <el-dropdown-item divided command="congig"
+          <el-dropdown-item divided :disabled="drillUpDisabled" @click="drillUp"
+            >上钻</el-dropdown-item
+          >
+          <el-dropdown-item
+            divided
+            :disabled="drillDownDisabled"
+            @click="drillDown"
+            >下钻</el-dropdown-item
+          >
+          <el-dropdown-item divided @click="drillConfig"
             >上下钻设置</el-dropdown-item
           >
         </el-dropdown-menu>
@@ -34,11 +41,22 @@ const getNode = inject('getNode') as () => Node;
 const nodeName = ref('');
 const nodeId = ref('');
 const blur = ref(false);
+const drillUpDisabled = ref(false);
+const drillDownDisabled = ref(false);
 
 // 菜单方法
-const emit = defineEmits(['pin']);
+const emit = defineEmits(['pin', 'drillUp', 'drillDown', 'drillConfig']);
 const pin = () => {
   emit('pin', nodeId.value);
+};
+const drillUp = () => {
+  emit('drillUp', nodeId.value);
+};
+const drillDown = () => {
+  emit('drillDown', nodeId.value);
+};
+const drillConfig = () => {
+  emit('drillConfig', nodeId.value);
 };
 
 onMounted(() => {
@@ -46,9 +64,12 @@ onMounted(() => {
   const node = getNode();
 
   // 初始化节点数据
+  debugger;
   nodeName.value = node.data.nodeName;
   nodeId.value = node.data.nodeId;
   blur.value = node.data.blur;
+  drillUpDisabled.value = node.data.drillUpDisabled;
+  drillDownDisabled.value = node.data.drillDownDisabled;
 
   // 监听节点变化
   node.on('change:data', ({ current }) => {
@@ -57,12 +78,18 @@ onMounted(() => {
         nodeName: newNodeName,
         nodeId: newNodeId,
         blur: newBlur,
+        drillUpDisabled: newDrillUpDisabled,
+        drillDownDisabled: newDrillDownDisabled,
       } = current;
 
       // 更新当前属性
       nodeName.value = newNodeName || '';
       nodeId.value = newNodeId || '';
       blur.value = newBlur !== undefined ? newBlur : false;
+      drillUpDisabled.value =
+        newDrillUpDisabled !== undefined ? newDrillUpDisabled : false;
+      drillDownDisabled.value =
+        newDrillDownDisabled !== undefined ? newDrillDownDisabled : false;
     }
   });
 });
