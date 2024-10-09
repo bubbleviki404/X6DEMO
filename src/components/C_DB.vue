@@ -18,6 +18,9 @@
     <el-col :span="4">
       <el-button type="primary" @click="exportToPng">导出图片</el-button>
     </el-col>
+    <el-col :span="4">
+      <el-button type="primary" @click="exportData">保存</el-button>
+    </el-col>
   </el-row>
   <div id="graph_container"></div>
   <TeleportContainer />
@@ -27,7 +30,7 @@
 import * as htmlToImage from 'html-to-image';
 import { Back, Right, Search } from '@element-plus/icons-vue';
 import { h, nextTick, onMounted, ref, onUnmounted, defineProps } from 'vue';
-import { Graph } from '@antv/x6';
+import { Graph, Model } from '@antv/x6';
 import { Scroller } from '@antv/x6-plugin-scroller';
 import { Selection } from '@antv/x6-plugin-selection';
 import { Export } from '@antv/x6-plugin-export';
@@ -36,6 +39,7 @@ import { register, getTeleport } from '@antv/x6-vue-shape';
 import NodeComponent from './Node.vue';
 import { DagreLayout } from '@antv/layout';
 import { getTransactionLevel } from '../utils/graphUtils';
+import FileSaver from 'file-saver';
 
 interface ResponseData {
   nodes: [];
@@ -46,6 +50,7 @@ interface ResponseData {
 }
 const props = defineProps<{
   graphData: ResponseData; // 根据需要定义类型
+  dbData: Model.FromJSONData;
 }>();
 
 // 将组件内部的模板“传送”到该组件的 DOM 结构外层的位置（无敌重要！让节点的菜单模板可以在父组件生效）
@@ -430,22 +435,32 @@ const renderGraph = () => {
 
 // 渲染数据
 const renderData = () => {
-  // 获取布局数据
-  const model = dagreLayout.layout(data);
-  if (model.edges) {
-    model.edges.forEach((e: any) => {
-      // 调整线宽度
-      let width = getTransactionLevel(
-        e.data,
-        minAmount.value,
-        maxAmount.value,
-        5
-      );
-      if (width) {
-        e.attrs.line.strokeWidth = width;
-        console.log('e.attrs.line.strokeWidth >>> ', e.attrs.line.strokeWidth);
-      }
-    });
+  let model;
+
+  if (props.graphData != null) {
+    // 获取布局数据
+    model = dagreLayout.layout(data);
+    if (model.edges) {
+      model.edges.forEach((e: any) => {
+        // 调整线宽度
+        let width = getTransactionLevel(
+          e.data,
+          minAmount.value,
+          maxAmount.value,
+          5
+        );
+        if (width) {
+          e.attrs.line.strokeWidth = width;
+          console.log(
+            'e.attrs.line.strokeWidth >>> ',
+            e.attrs.line.strokeWidth
+          );
+        }
+      });
+    }
+  }
+  if (props.dbData != null) {
+    model = props.dbData;
   }
 
   // 渲染数据
@@ -697,6 +712,13 @@ const exportToPng = () => {
     link.click();
   });
 };
+
+const exportData = () => {
+  const data = graph.value.toJSON();
+  const blob = new Blob([JSON.stringify(data)], { type: '' });
+  FileSaver.saveAs(blob, 'demo.json');
+};
+
 onMounted(async () => {
   nextTick(() => {
     originData.value = props.graphData;

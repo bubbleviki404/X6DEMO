@@ -21,6 +21,9 @@
           <el-dropdown-item divided @click="drillConfig"
             >上下钻设置</el-dropdown-item
           >
+          <el-dropdown-item divided @click="addTag">添加标签</el-dropdown-item>
+          <el-dropdown-item divided @click="flows">全部流向</el-dropdown-item>
+          <el-dropdown-item divided @click="detail">查看明细</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>

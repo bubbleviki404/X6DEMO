@@ -339,6 +339,845 @@ const responseData_2 = {
     phone: [],
   },
 };
+const responseData_db = {
+  cells: [
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '71cc76ec-83b7-471f-bc20-106ed756c580',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 3笔 共297000元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 297000 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '622908398178980019',
+        port: 'moneyOut_6231139901000023075',
+      },
+      target: {
+        cell: '6231139901000023075',
+        port: 'moneyIn_622908398178980019',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '46c86dd9-9663-4bc7-af88-22630f005ed3',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 4笔 共363908元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 363908 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6228480086109452374',
+        port: 'moneyOut_6231139901000023075',
+      },
+      target: {
+        cell: '6231139901000023075',
+        port: 'moneyIn_6228480086109452374',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: 'e6027465-cac6-4bb0-b975-1289af78df6e',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 1笔 共6227元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 6227 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6222021001037345441',
+        port: 'moneyOut_6231139901000023075',
+      },
+      target: {
+        cell: '6231139901000023075',
+        port: 'moneyIn_6222021001037345441',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: 'c878b9f9-ca17-4cfe-9679-5bf764dba2be',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 10笔 共210432元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 210432 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '62262289035973856226',
+        port: 'moneyOut_6231139901000023075',
+      },
+      target: {
+        cell: '6231139901000023075',
+        port: 'moneyIn_62262289035973856226',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '1de2950f-87d7-400f-b720-8aa4e353aaae',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 1笔 共50000元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 50000 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6231139901000023075',
+        port: 'moneyOut_622908398178980019',
+      },
+      target: {
+        cell: '622908398178980019',
+        port: 'moneyIn_6231139901000023075',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: 'fa355c57-72a8-4f47-90b5-7ff90d157c8c',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 2笔 共60694元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 60694 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6231139901000023075',
+        port: 'moneyOut_6228480088424598873',
+      },
+      target: {
+        cell: '6228480088424598873',
+        port: 'moneyIn_6231139901000023075',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '930e569a-2a8b-418f-a334-ba71017b4cb8',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 3笔 共61779元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 61779 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6231139901000023075',
+        port: 'moneyOut_6228480086300701975',
+      },
+      target: {
+        cell: '6228480086300701975',
+        port: 'moneyIn_6231139901000023075',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: 'a150e4bb-dd07-45e7-8a73-e603e3f043e5',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 2笔 共129.8元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 129.8 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6231139901000023075',
+        port: 'moneyOut_2088002822573801',
+      },
+      target: { cell: '2088002822573801', port: 'moneyIn_6231139901000023075' },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: 'c85d0069-ae9f-44d9-88d0-357aec7e6f0a',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 1笔 共25834元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 25834 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6231139901000023075',
+        port: 'moneyOut_6230580000058864633',
+      },
+      target: {
+        cell: '6230580000058864633',
+        port: 'moneyIn_6231139901000023075',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '148e60c9-f5d9-42ea-ae09-c874e1424f6d',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 3笔 共547.6800000000001元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 547.6800000000001 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: { cell: '6231139901000023075', port: 'moneyOut_18272179' },
+      target: { cell: '18272179', port: 'moneyIn_6231139901000023075' },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '19b4fbee-0b4d-4ada-9d92-b085348426db',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 1笔 共49.9元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 49.9 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '2088002822573801',
+        port: 'moneyOut_6231139901000023075',
+      },
+      target: { cell: '6231139901000023075', port: 'moneyIn_2088002822573801' },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '706c69f5-733d-4b24-8dea-f07faeb17c1d',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 2笔 共300000元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 300000 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: {
+        cell: '6230580000058864633',
+        port: 'moneyOut_6231139901000023075',
+      },
+      target: {
+        cell: '6231139901000023075',
+        port: 'moneyIn_6230580000058864633',
+      },
+    },
+    {
+      shape: 'edge',
+      attrs: { line: { stroke: '#36121e', strokeWidth: 1 } },
+      id: '2d8d721c-5b0a-45e5-b918-95dc46c696ea',
+      zIndex: 1,
+      labels: [
+        {
+          attrs: {
+            label: {
+              type: 'money',
+              text: '转账 1笔 共339.62元',
+              fill: '#36121e',
+              stroke: '#36121e',
+            },
+          },
+        },
+      ],
+      data: { isFilter: false, amount: 339.62 },
+      router: { name: 'metro' },
+      connector: { name: 'rounded', args: { radius: 30 } },
+      source: { cell: '18272179', port: 'moneyOut_6231139901000023075' },
+      target: { cell: '6231139901000023075', port: 'moneyIn_18272179' },
+    },
+    {
+      position: { x: 620, y: 140 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '6231139901000023075',
+      zIndex: 2,
+      label: '吴苹_6231139901000023075',
+      data: {
+        nodeId: '6231139901000023075',
+        nodeName: '吴苹_6231139901000023075',
+        blur: false,
+        drillUpDisabled: false,
+        drillDownDisabled: false,
+      },
+      _order: 0,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyIn', id: 'moneyIn_622908398178980019' },
+          { group: 'moneyIn', id: 'moneyIn_6228480086109452374' },
+          { group: 'moneyIn', id: 'moneyIn_6222021001037345441' },
+          { group: 'moneyIn', id: 'moneyIn_62262289035973856226' },
+          { group: 'moneyIn', id: 'moneyIn_2088002822573801' },
+          { group: 'moneyIn', id: 'moneyIn_6230580000058864633' },
+          { group: 'moneyIn', id: 'moneyIn_18272179' },
+          { group: 'moneyOut', id: 'moneyOut_622908398178980019' },
+          { group: 'moneyOut', id: 'moneyOut_6228480088424598873' },
+          { group: 'moneyOut', id: 'moneyOut_6228480086300701975' },
+          { group: 'moneyOut', id: 'moneyOut_2088002822573801' },
+          { group: 'moneyOut', id: 'moneyOut_6230580000058864633' },
+          { group: 'moneyOut', id: 'moneyOut_18272179' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 1150, y: 60 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '622908398178980019',
+      zIndex: 2,
+      label: '刘京_622908398178980019',
+      data: {
+        nodeId: '622908398178980019',
+        nodeName: '刘京_622908398178980019',
+        blur: false,
+        drillUpDisabled: false,
+        drillDownDisabled: false,
+      },
+      _order: 0,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyIn', id: 'moneyIn_6231139901000023075' },
+          { group: 'moneyOut', id: 'moneyOut_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 170, y: 540 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '6222021001037345441',
+      zIndex: 2,
+      label: '欧文才_6222021001037345441',
+      data: {
+        nodeId: '6222021001037345441',
+        nodeName: '欧文才_6222021001037345441',
+        blur: false,
+        drillUpDisabled: true,
+        drillDownDisabled: false,
+      },
+      _order: 1,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyOut', id: 'moneyOut_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 1150, y: 380 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '6228480086300701975',
+      zIndex: 2,
+      label: '李璇_6228480086300701975',
+      data: {
+        nodeId: '6228480086300701975',
+        nodeName: '李璇_6228480086300701975',
+        blur: false,
+        drillUpDisabled: false,
+        drillDownDisabled: true,
+      },
+      _order: 2,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyIn', id: 'moneyIn_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 170, y: 700 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '62262289035973856226',
+      zIndex: 2,
+      label: '彭孝英_62262289035973856226',
+      data: {
+        nodeId: '62262289035973856226',
+        nodeName: '彭孝英_62262289035973856226',
+        blur: false,
+        drillUpDisabled: true,
+        drillDownDisabled: false,
+      },
+      _order: 2,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyOut', id: 'moneyOut_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 1150, y: 220 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '6228480088424598873',
+      zIndex: 2,
+      label: '陈红_6228480088424598873',
+      data: {
+        nodeId: '6228480088424598873',
+        nodeName: '陈红_6228480088424598873',
+        blur: false,
+        drillUpDisabled: false,
+        drillDownDisabled: true,
+      },
+      _order: 1,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyIn', id: 'moneyIn_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 170, y: 380 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '6228480086109452374',
+      zIndex: 2,
+      label: '王英霖_6228480086109452374',
+      data: {
+        nodeId: '6228480086109452374',
+        nodeName: '王英霖_6228480086109452374',
+        blur: false,
+        drillUpDisabled: true,
+        drillDownDisabled: false,
+      },
+      _order: 0,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyOut', id: 'moneyOut_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 170, y: 860 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '18272179',
+      zIndex: 2,
+      label: '上海哈啰普惠科技有限公司_18272179',
+      data: {
+        nodeId: '18272179',
+        nodeName: '上海哈啰普惠科技有限公司_18272179',
+        blur: false,
+        drillUpDisabled: false,
+        drillDownDisabled: false,
+      },
+      _order: 3,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyIn', id: 'moneyIn_6231139901000023075' },
+          { group: 'moneyOut', id: 'moneyOut_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 1150, y: 540 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '2088002822573801',
+      zIndex: 2,
+      label: '王桂香_2088002822573801',
+      data: {
+        nodeId: '2088002822573801',
+        nodeName: '王桂香_2088002822573801',
+        blur: false,
+        drillUpDisabled: false,
+        drillDownDisabled: false,
+      },
+      _order: 3,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyIn', id: 'moneyIn_6231139901000023075' },
+          { group: 'moneyOut', id: 'moneyOut_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    {
+      position: { x: 1150, y: 700 },
+      size: { width: 80, height: 100 },
+      view: 'vue-shape-view',
+      shape: 'custom-vue-node',
+      id: '6230580000058864633',
+      zIndex: 2,
+      label: '孙亚涛_6230580000058864633',
+      data: {
+        nodeId: '6230580000058864633',
+        nodeName: '孙亚涛_6230580000058864633',
+        blur: false,
+        drillUpDisabled: false,
+        drillDownDisabled: false,
+      },
+      _order: 4,
+      ports: {
+        items: [
+          { group: 'phone', id: 'phone' },
+          { group: 'moneyIn', id: 'moneyIn_6231139901000023075' },
+          { group: 'moneyOut', id: 'moneyOut_6231139901000023075' },
+        ],
+        groups: {
+          moneyIn: {
+            position: { name: 'left' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'blue', r: 2 },
+            },
+            zIndex: 1,
+          },
+          moneyOut: {
+            position: { name: 'right' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'green', r: 2 },
+            },
+            zIndex: 1,
+          },
+          phone: {
+            position: { name: 'bottom' },
+            attrs: {
+              circle: { magnet: false, stroke: 'black', fill: 'purple', r: 2 },
+            },
+            zIndex: 1,
+          },
+        },
+      },
+    },
+  ],
+};
 
 const routes = [
   {
@@ -349,7 +1188,7 @@ const routes = [
   {
     path: '/other',
     component: C_DB,
-    props: () => ({ graphData: responseData_2 }),
+    props: () => ({ dbData: responseData_db }),
   }, // 传递路由查询参数
 ];
 
