@@ -22,6 +22,21 @@
       <el-button type="primary" @click="exportData">保存</el-button>
     </el-col>
   </el-row>
+  <!-- 右键菜单 -->
+  <div
+    v-if="isMenuVisible"
+    class="custom-context-menu"
+    :style="{
+      position: 'absolute',
+      top: `${menuPosition.y}px`,
+      left: `${menuPosition.x}px`,
+      zIndex: 1000,
+    }"
+    @mouseleave="hideMenu"
+  >
+    <div @click="pin">群组</div>
+    <div @click="otherAction">群组2</div>
+  </div>
   <div id="graph_container"></div>
   <TeleportContainer />
 </template>
@@ -429,6 +444,7 @@ const renderGraph = () => {
       strict: true,
       showNodeSelectionBox: true,
       showEdgeSelectionBox: true,
+      className: 'custom-selection',
     })
   );
 };
@@ -654,9 +670,25 @@ const renderNodes = () => {
 
     // 过滤勾选节点
     if (selected && selected.length > 1) {
-      // renderSelectionNodes(selected);
+      const parent = document.getElementsByClassName('custom-selection')[0];
+      if (parent) {
+        parent.addEventListener('contextmenu', showMenu, true); // 使用捕获阶段
+      }
     }
   });
+};
+const isMenuVisible = ref(false);
+const menuPosition = ref({ x: 0, y: 0 });
+
+const showMenu = (event: MouseEvent) => {
+  event.preventDefault();
+  // 确保 menuPosition 只在菜单可见时设置
+  menuPosition.value = { x: event.clientX, y: event.clientY };
+  isMenuVisible.value = true;
+};
+// 隐藏右键菜单
+const hideMenu = () => {
+  isMenuVisible.value = false;
 };
 
 const onCenterContent = () => {
@@ -750,5 +782,20 @@ onUnmounted(() => {});
 .grid-content {
   border-radius: 4px;
   min-height: 36px;
+}
+.custom-context-menu {
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+}
+
+.custom-context-menu div {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.custom-context-menu div:hover {
+  background-color: #f5f5f5; /* 鼠标悬停效果 */
 }
 </style>
